@@ -1,0 +1,83 @@
+<template>
+    <div id="certificateFilingChart">
+        <div class="content">
+            <search v-model="searchValue" :options="searchOption" @search="queryData(1)"></search>
+            <div class='wrap'>
+                <month-pie-chart :title="'2020年合格证发放图表统计'"></month-pie-chart>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-setting-normal">
+            <el-button>导出</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import Search from '@/components/search'
+import BreadFoot from '@/components/BreadFoot.vue'
+import toolBar from '@/components/ToolBar.vue'
+import MonthPieChart from '@/components/echart/MonthPieChart.vue'
+export default {
+    name: 'certificateFilingChart',
+    data () {
+        return {
+            searchValue: {},
+            searchOption: [
+                {
+                    label: '所属区域',
+                    type: 'select',
+                    key: 'region',
+                    list: [
+                        {
+                            value: 2,
+                            label: '宝安区'
+                        },
+                        {
+                            value: 3,
+                            label: '盐田区'
+                        },
+                        {
+                            value: 5,
+                            label: '南山区'
+                        },
+                        {
+                            value: 7,
+                            label: '龙岗区'
+                        },
+                        {
+                            value: 8,
+                            label: '龙华县'
+                        },
+                        {
+                            value: 9,
+                            label: '福田区'
+                        }
+                    ]
+                },
+                {
+                    label: '企业名称',
+                    type: 'input',
+                    key: 'enterpriseName'
+                },
+                {
+                    label: '上传日期',
+                    type: 'date',
+                    key: 'daterange'
+                }
+            ],
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '合格证备案统计', path: '' }
+            ]
+        }
+    },
+    components: {
+        BreadFoot,
+        Search,
+        MonthPieChart,
+        toolBar
+    },
+    methods: {
+        queryData () {}
+    }
+}
+</script>

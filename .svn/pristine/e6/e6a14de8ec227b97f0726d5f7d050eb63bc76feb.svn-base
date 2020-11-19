@@ -1,0 +1,2196 @@
+<!-- 新增备案申请 -->
+<template>
+    <div class="recordApply">
+        <div class="bg">
+            <div class="steps">
+                <div class="step-item">
+                    <div class="step-index"  :class="{current: currentStep >= 1}">1</div>
+                    <div class="step-name">基本信息</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-index" :class="{current: currentStep >= 2}">2</div>
+                    <div class="step-name">其他备案材料</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-index" :class="{current: currentStep >= 3}">3</div>
+                    <div class="step-name">设备选取</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-index" :class="{current: currentStep >= 4}">4</div>
+                    <div class="step-name">用户须知</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-index" :class="{current: currentStep >= 5}">5</div>
+                    <div class="step-name">提交成功</div>
+                </div>
+            </div>
+            <div class="record-content" v-loading="loading">
+            <el-form :model="ruleForm" v-show="currentStep === 1" :rules="rules" size="small " ref="ruleForm" class="form record-content">
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseName" :rules="$validate({required:true,msg:'请输入企业名称',type:'C+E+)'})">
+                            <div class="form-item-name">
+                                <span class="red">*&nbsp;</span>经营者名称(企业名称)
+                            </div>
+                            <el-input v-model="ruleForm.enterpriseName" maxlength="80" placeholder="请输入企业名称"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseLegalRepresentative" :rules="[{
+                            required: ruleForm.type === 2, message: '请输入企业法人代表', trigger: 'change'
+                        }]">
+                            <div class="form-item-name">
+                                <el-radio-group v-model="ruleForm.type" @change="enterpriseTypeChange">
+                                    <el-radio :label="1">个体经营</el-radio>
+                                    <el-radio :label="2">企业经营</el-radio>
+                                </el-radio-group>
+                            </div>
+                            <el-input v-model="ruleForm.enterpriseLegalRepresentative" maxlength="20" :disabled="ruleForm.type === 1"
+                            :placeholder="ruleForm.type === 2 ? '请输入企业法人代表' : ''"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseArea" class="fl">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>经营地址</div>
+                            <el-select v-model="ruleForm.enterpriseArea" class="select-small" placeholder="请选择">
+                                <el-option
+                                    v-for="item in regionList"
+                                    :key="item.regionId"
+                                    :label="item.regionName"
+                                    :value="item.regionId">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item prop="enterpriseDetailedAddress" :rules="$validate({required:true,noRepeat:true,type:'C+E+N'})" class="fl" style="margin: 32px 0 0 10px;">
+                            <el-input v-model="ruleForm.enterpriseDetailedAddress" class="input-small" maxlength="60"
+                            placeholder="请输入"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseCreditIdentifier" :rules="$validate({required:true,noRepeat:true,repeatLength:18,type:'enterpriseCreditIdentifier'})">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>社会信用代码</div>
+                            <el-input v-model="ruleForm.enterpriseCreditIdentifier" maxlength="18" placeholder="请输入"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseOwner" :rules="$validate({required:true,type:'C+E'})">
+                            <div class="form-item-name">
+                                <span class="red">*&nbsp;</span>主要负责人姓名
+                            </div>
+                            <el-input v-model="ruleForm.enterpriseOwner" maxlength="20"
+                            placeholder="个体填写经营者，企业填写法人任命的负责"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseOwnerIdcardnumber" :rules="$validate({required:true,type:'idcard'})">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>主要负责人身份证号</div>
+                            <el-input v-model="ruleForm.enterpriseOwnerIdcardnumber" maxlength="18" placeholder="请输入"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseOwnerPhone" :rules="$validate({required:true,type:'phone'})">
+                            <div class="form-item-name">
+                                <span class="red">*&nbsp;</span>主要负责人联系电话</div>
+                            <el-input v-model="ruleForm.enterpriseOwnerPhone" maxlength="11" placeholder="请输入"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseOwnerEmail" :rules="$validate({required:false})">
+                            <div class="form-item-name">主要负责人邮箱/传真</div>
+                            <el-input v-model="ruleForm.enterpriseOwnerEmail" maxlength="50" placeholder="请输入"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseLinkName" :rules="$validate({required:false,type:'phone'})">
+                            <div class="form-item-name">
+                                经办人联系电话
+                            </div>
+                            <el-input v-model="ruleForm.enterpriseLinkName" maxlength="11"
+                            placeholder="填写经办人联系电话时，备案进度将短信通知经办人"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseSecurityName" :rules="$validate({required:false})">
+                            <div class="form-item-name">
+                                安全负责人
+                            </div>
+                            <el-input v-model="ruleForm.enterpriseSecurityName" maxlength="120"
+                            placeholder="请输入"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseOperatingType" :rules="$validate({required:true, msg: '请选择经营类型'})">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>经营类型</div>
+                            <el-radio-group v-model="ruleForm.enterpriseOperatingType">
+                                <el-radio :label="1">综合修理</el-radio>
+                                <el-radio :label="2">机动车生产、进口企业授权维修</el-radio>
+                                <el-radio :label="3">其他</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseChainOrGroupIs" :rules="$validate({required:true, msg: '请选择经营类别'})">
+                            <div class="form-item-name">
+                                <span class="red">*&nbsp;</span>经营类别
+                            </div>
+                            <el-radio-group v-model="ruleForm.enterpriseChainOrGroupIs">
+                                <el-radio :label="1">单店/总店</el-radio>
+                                <el-radio :label="2">连锁分店</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseEconomicCategory" :rules="$validate({required:true, msg: '请选择企业性质'})">
+                            <div class="form-item-name">
+                                <span class="red">*&nbsp;</span>企业性质
+                            </div>
+                            <el-radio-group v-model="ruleForm.enterpriseEconomicCategory">
+                                <el-radio :label="1">国有</el-radio>
+                                <el-radio :label="2">集体</el-radio>
+                                <el-radio :label="3">私营</el-radio>
+                                <el-radio :label="4">外资</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseBusinessType" :rules="$validate({required:true, msg: '请选择业务类型'})">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>业务类型</div>
+                            <el-radio-group v-model="ruleForm.enterpriseBusinessType" @change="businessTypeChange">
+                                <el-radio :label="1">汽车维修</el-radio>
+                                <el-radio :label="2">摩托车维修</el-radio>
+                                <el-radio :label="3">其他机动车维修</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item prop="enterpriseBusinessCategory" :rules="$validate({required:true, msg: '请选择业户类别'})">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>业户类别</div>
+                            <el-radio-group v-model="ruleForm.enterpriseBusinessCategory" @change="ruleForm.projectType = []">
+                                <el-radio :label="1">一类</el-radio>
+                                <el-radio :label="2">二类</el-radio>
+                                <el-radio :label="3" v-if="ruleForm.enterpriseBusinessType !== 2">三类</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item prop="signboardProductMethod" :rules="$validate({required:true, msg: '请选择机动车维修标志牌制作方式'})">
+                            <div class="form-item-name"><span class="red">*&nbsp;</span>机动车维修标志牌制作方式</div>
+                            <el-radio-group v-model="ruleForm.signboardProductMethod">
+                                <el-radio :label="0">自行制作</el-radio>
+                                <el-radio :label="1">协会统一制作</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <div v-if="ruleForm.enterpriseBusinessType !== 2">
+                    <el-form-item prop="enterpriseOperationAreaS" :rules="$validate({required:true, msg: '请选择项目种类'})">
+                        <div class="form-item-name"><span class="red">*&nbsp;</span>项目种类</div>
+                        <div class="form-item-name" v-if="ruleForm.enterpriseBusinessCategory === 1">
+                            一类<span class="text9 small">（可多选）</span>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <el-radio v-model="ruleForm.enterpriseIsOwnerPaintRoom" :label="1">自有漆房</el-radio>
+                            <el-radio v-model="ruleForm.enterpriseIsOwnerPaintRoom" :label="2">外协漆房</el-radio>
+                        </div>
+                        <el-checkbox-group v-model="ruleForm.enterpriseOperationAreaS" v-if="ruleForm.enterpriseBusinessCategory === 1">
+                            <el-checkbox label="大中型客车">大中型客车维修</el-checkbox>
+                            <el-checkbox label="大型货车">大型货车维修</el-checkbox>
+                            <el-checkbox label="小型车">小型车维修</el-checkbox>
+                            <el-checkbox label="危险货物运输车辆维修">危险货物运输车辆维修</el-checkbox>
+                        </el-checkbox-group>
+                        <div class="form-item-name" v-if="ruleForm.enterpriseBusinessCategory === 2">
+                            二类<span class="text9 small">（可多选）</span>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <el-radio v-model="ruleForm.enterpriseIsOwnerPaintRoom" :label="1">自有漆房</el-radio>
+                            <el-radio v-model="ruleForm.enterpriseIsOwnerPaintRoom" :label="2">外协漆房</el-radio>
+                        </div>
+                        <el-checkbox-group v-model="ruleForm.enterpriseOperationAreaS" v-if="ruleForm.enterpriseBusinessCategory === 2">
+                            <el-checkbox label="大中型客车">大中型客车维修</el-checkbox>
+                            <el-checkbox label="大型货车">大型货车维修</el-checkbox>
+                            <el-checkbox label="小型车">小型车维修</el-checkbox>
+                        </el-checkbox-group>
+                        <div class="form-item-name" v-if="ruleForm.enterpriseBusinessCategory === 3">
+                            三类<span class="text9 small">（可多选）</span>
+                        </div>
+                        <el-checkbox-group v-model="ruleForm.enterpriseOperationAreaS" v-if="ruleForm.enterpriseBusinessCategory === 3">
+                            <el-checkbox label="汽车综合小修"></el-checkbox>
+                            <el-checkbox label="发动机维修"></el-checkbox>
+                            <el-checkbox label="车身维修"></el-checkbox>
+                            <el-checkbox label="电气系统维修"></el-checkbox>
+                            <el-checkbox label="自动变速器维修"></el-checkbox>
+                            <el-checkbox label="轮胎动平衡及修补"></el-checkbox>
+                            <el-checkbox label="四轮定位检测调整"></el-checkbox>
+                            <el-checkbox label="汽车润滑与养护"></el-checkbox>
+                            <el-checkbox label="喷油泵喷油器维修"></el-checkbox>
+                            <el-checkbox label="曲轴修磨"></el-checkbox>
+                            <el-checkbox label="气缸镗磨"></el-checkbox>
+                            <el-checkbox label="散热器维修"></el-checkbox>
+                            <el-checkbox label="空调维修"></el-checkbox>
+                            <el-checkbox label="汽车美容装潢"></el-checkbox>
+                            <el-checkbox label="汽车玻璃安装及修复"></el-checkbox>
+                        </el-checkbox-group>
+                    </el-form-item>
+                </div>
+            </el-form>
+            <div class="other-material" v-show="currentStep === 2">
+                <div class="upload-tips">支持JPG、JPEG、PNG、PDF、DOC格式的文件，最大不超过5M。请保证照片中的文字清晰可见，避免模糊或有遮挡，以免影响您的备案审批流程</div>
+                <el-row v-for="(obj, objIndex) in imgList" :key="obj.name">
+                    <h5 v-if="obj.show">{{obj.name}}
+                        <a class="fr"
+                            v-if="obj.hasFile"
+                            :href="obj.fileSrc"
+                            target="_blank"
+                            style="margin-right:20px;color:#1790FF;font-size:14px;font-weight:normal;">
+                            {{obj.fileName}}</a>
+                        <a class="fr"
+                            v-if="obj.hasExplain"
+                            target="_blank"
+                            @click="showsExplainA(obj.explainType)"
+                            style="margin-right:20px;color:#1790FF;font-size:14px;font-weight:normal;cursor:pointer;">
+                            上传说明</a>
+                    </h5>
+                    <div v-for="(item,index) in obj.list" :key="item.name">
+                        <el-col :span="12" v-if="item.show">
+                            <div class="upload-item">
+                                <el-tooltip class="item" effect="dark" v-if="ruleForm.enterpriseBusinessType===2&&item.tipText">
+                                    <div slot="content" v-html="item.tipText"></div>
+                                    <img src="../../../assets/images/tips.png" style="position:absolute;right:38px;top:0;">
+                                </el-tooltip>
+                                <el-upload
+                                    class="upload-demo"
+                                    :action="uploadURL + 'attachment/file/upload'"
+                                    :on-success="(res, file)=>uploadSuccess(res, objIndex, index, item.type, file)"
+                                    :on-error="uploadError"
+                                    :on-exceed="uploadExceed"
+                                    :limit="item.limit"
+                                    multiple
+                                    :before-upload="beforeAvatarUpload"
+                                    :file-list="item.url"
+                                    list-type="picture-card">
+                                    <i class="el-icon-plus"></i>
+                                    <p class="upload-text"><span v-html="item.text"></span></p>
+                                </el-upload>
+                                <ul class="upload-image-list" v-if="item.url.length">
+                                    <li class="upload-image-list-item" v-for="(img, k) in item.url" :key="img.materialUrl">
+                                        <img v-if="/.pdf$/.test(img.materialUrl)" :src="iconPdf" @click="preview(img.materialUrl)">
+                                        <img v-else-if="/.doc|.docx$/.test(img.materialUrl)" :src="iconDoc">
+                                        <img v-else :src="img.materialUrl" @click="preview(img.materialUrl)">
+                                        <i class="el-icon-error close" @click="cleanImage(objIndex, index, k)"></i>
+                                    </li>
+                                </ul>
+                            </div>
+                        </el-col>
+                    </div>
+                </el-row>
+            </div>
+            <div v-show="currentStep === 3">
+                <el-tabs type="border-card" v-model="tabIndex" class="otherList" id="otherList">
+                    <el-tab-pane label="通用设备" name="tab1" v-if="otherList1.length">
+                        <div v-show="tabIndex==='tab1'" class="other" >
+                            <el-table
+                                :data="otherList1"
+                                :header-cell-style="{background:'#EDF0F5','text-align':'center'}"
+                                style="width: 100%">
+                                <el-table-column
+                                    prop="orderNumber"
+                                    label="序号"
+                                    align="center">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="detectEquipmentName"
+                                    label="设备名称"
+                                    align="center">
+                                    <template slot-scope="scope">
+                                        <span :class="{'red':scope.row.error}">{{scope.row.detectEquipmentName}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                    prop="equipmentCount"
+                                    label="数量"
+                                    align="center">
+                                        <template slot-scope="scope">
+                                            <el-input-number v-model="scope.row.equipmentCount" :step-strictly="true" :min="0"></el-input-number>
+                                        </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="专用设备" name="tab2" v-if="otherList2.length">
+                        <div v-show="tabIndex==='tab2'" class="other">
+                            <el-table
+                                :data="otherList2"
+                                :header-cell-style="{background:'#EDF0F5','text-align':'center'}"
+                                style="width: 100%">
+                                <el-table-column
+                                prop="orderNumber"
+                                label="序号"
+                                align="center">
+                                </el-table-column>
+                                <el-table-column
+                                prop="specialEquipmentName"
+                                label="设备名称"
+                                align="center">
+                                <template slot-scope="scope">
+                                    <span :class="{'red':scope.row.error}">{{scope.row.specialEquipmentName}}</span>
+                                </template>
+                                </el-table-column>
+                                <el-table-column
+                                prop="otherCondition"
+                                label="其他条件"
+                                :width="200"
+                                align="center">
+                                </el-table-column>
+                                <el-table-column
+                                prop="equipmentCount"
+                                label="数量"
+                                width="200"
+                                align="center">
+                                    <template slot-scope="scope">
+                                        <el-input-number v-model="scope.row.equipmentCount" :step-strictly="true" :min="0"></el-input-number>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="检测设备" name="tab3" v-if="otherList3.length">
+                        <div v-show="tabIndex==='tab3'" class="other">
+                            <el-table
+                                :data="otherList3"
+                                :header-cell-style="{background:'#EDF0F5','text-align':'center'}"
+                                style="width: 100%">
+                                <el-table-column
+                                    prop="orderNumber"
+                                    label="序号"
+                                    align="center">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="detectEquipmentName"
+                                    label="设备名称"
+                                    align="center">
+                                    <template slot-scope="scope">
+                                        <span :class="{'red':scope.row.error}">{{scope.row.detectEquipmentName}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                    prop="otherCondition"
+                                    label="其他条件"
+                                    align="center">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="equipmentCount"
+                                    label="数量"
+                                    align="center">
+                                        <template slot-scope="scope">
+                                            <el-input-number v-model="scope.row.equipmentCount" :step-strictly="true" :min="0"></el-input-number>
+                                        </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="通用设备" name="tab4" v-if="otherList4.length">
+                        <div v-show="tabIndex==='tab4'" class="other">
+                            <el-table
+                                :data="otherList4"
+                                :header-cell-style="{background:'#EDF0F5','text-align':'center'}"
+                                style="width: 100%">
+                                <el-table-column
+                                    prop="orderNumber"
+                                    label="序号"
+                                    width="120"
+                                    align="center">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="universalEquipmentName"
+                                    label="设备名称"
+                                    align="center">
+                                    <template slot-scope="scope">
+                                        <span :class="{'red':scope.row.error}">{{scope.row.universalEquipmentName}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                    prop="equipmentCount"
+                                    label="数量"
+                                    width="200"
+                                    align="center">
+                                        <template slot-scope="scope">
+                                            <el-input-number v-model="scope.row.equipmentCount" :step-strictly="true" :min="0"></el-input-number>
+                                        </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="通用设备" name="tab5" v-if="otherList5.length">
+                        <div v-show="tabIndex==='tab5'" class="other">
+                            <el-table
+                                :data="otherList5"
+                                :header-cell-style="{background:'#EDF0F5','text-align':'center'}"
+                                style="width: 100%">
+                                <el-table-column
+                                    prop="orderNumber"
+                                    label="序号"
+                                    width="120"
+                                    align="center">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="universalEquipmentName"
+                                    label="设备名称"
+                                    align="center">
+                                    <template slot-scope="scope">
+                                        <span :class="{'red':scope.row.error}">{{scope.row.universalEquipmentName}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                    prop="equipmentCount"
+                                    label="数量"
+                                    width="200"
+                                    align="center">
+                                        <template slot-scope="scope">
+                                            <el-input-number v-model="scope.row.equipmentCount" :step-strictly="true" :min="0"></el-input-number>
+                                        </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+            </div>
+            <div class="statement" v-show="currentStep === 4">
+                <h4>本经营者声明：</h4>
+                <p>1.已知晓《道路运输条例》《机动车维修管理规定》《汽车维修业开业条件》（GB/T 16739）、《摩托车维修业开业条件》（GB/T 18189）等国家机动车维修有关法律法规及标准，知晓机动车维修开业条件要求和备案要求；</p>
+                <p>2.所提供的备案材料信息内容真实、准确，不存在虚假记载、误导性陈述或者重大遗漏，所有文件的签名、印章真实有效。如有不实之处，愿承担相应的法律责任</p>
+                <el-checkbox v-model="statementChecked">知晓并愿意承担相应法律责任</el-checkbox>
+            </div>
+            <div class="success" v-show="currentStep === 5">
+                <p class="text">恭喜您已成功提交企业备案资料，备案申请编码为：<span class="red">{{recordCode}}</span>，您可根据备案申请编号和企业全称通过系统中的备案进度查询菜单进行备案进度查询，感谢您的使用！</p>
+                <div class="time">
+                    <span class="num">{{countDowntime}}s</span>
+                    <div class="back">后返回首页</div>
+                </div>
+            </div>
+            <div class="next" v-if="currentStep < 5">
+                <div class="pre-button" @click="preStep" v-show="currentStep > 1 && currentStep < 5">上一步</div>
+                <div class="next-button" :class="{disabled: (!statementChecked && currentStep === 4) || btnForbidden}" @click="nextStep" v-show="currentStep < 5">下一步</div>
+            </div>
+        </div>
+        </div>
+        <el-dialog
+            title="PDF预览"
+            :visible.sync="previewVisible"
+            :before-close="() => { previewSrc = ''; previewVisible = false }"
+            width="80%">
+            <iframe :src="previewSrc" width="100%" height="550px"></iframe>
+        </el-dialog>
+        <model
+            @alertCancel="showExplain=false"
+            :alert="showExplain"
+            :width="666"
+            :title="'上传说明'">
+            <div class="alert-content" style="max-height:520px;overflow:auto;">
+                <p v-if="explainType===1" style="line-height:30px;">经营场地说明</p>
+                <table class="explainTable" border="1" v-if="explainType===1">
+                    <tr>
+                        <th width="100">经营类别</th>
+                        <th width="100">项目</th>
+                        <th>要求</th>
+                    </tr>
+                    <tr>
+                        <td rowspan="4">一二类汽车维修</td>
+                        <td>接待室</td>
+                        <td class="tal">1，公告各类证照、业务受理程序、服务承诺、用户抱怨受理程序、主修车型、作业项目、配件价格、工时定额。<br/>
+                            2,有供客户休息的设施或休息室。<br/>
+                            3，符合面积要求，其中一类维修企业不小于80m²，二类维修企业不小于20㎡。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>停车场</td>
+                        <td class="tal">1，停车场地面应平整坚实，应保证车辆行驶通畅。<br/>
+                            2，符合面积要求，其中一类维修企业不小于200㎡，二类维修企业不小于150㎡。<br/>
+                            3，区域界定标志明显。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">生产厂房</td>
+                        <td class="tal">1，符合面积要求，其中一类企业不小于800㎡，二类企业不小于200㎡。<br/>
+                            2，生产厂房内应设有总成维修间，其中一类维修企业总成维修间面积不小于30㎡，二类维修企业不少于20㎡，并设置总成维修所需的工作台、拆具、计量器具等。<br/>
+                            3，应设有预检工位，预检工位应有相应的故障诊断、检测设备。<br/>
+                            4，地面应平整坚实。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tal">
+                            对于从事燃气汽车维修的企业，还应符合以下条件：
+                            1，有专用维修厂房，厂房应为永久性建筑，不得使用易燃建筑材料，面积应与生产规模相适应。<br/>
+                            2，专用厂房内通风良好，不得堆放可能危及安全的物品。厂房周围5m内不得有任何可能危及安全的设施。<br/>
+                            3，设有密封性检查、卸压操作的专用场地，可以设在室外。应远离火源，应明示防明火、防静电的标志。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            说明：租赁场地的，其租赁期限不得少于一年。
+                        </td>
+                    </tr>
+                </table>
+                <p v-if="explainType===2" style="line-height:30px;">经营场地说明</p>
+                <table class="explainTable" border="1" v-if="explainType===2">
+                    <tr>
+                        <th width="100">经营类别</th>
+                        <th width="100">项目</th>
+                        <th>要求</th>
+                    </tr>
+                    <tr>
+                        <td rowspan="11">三类汽车维修</td>
+                        <td>汽车综合小修</td>
+                        <td class="tal">
+                            1，接待室面积不小于10㎡，整洁明亮，并有供客户休息的措施。<br/>
+                            2，生产厂房面积不低于100㎡。<br/>
+                            3，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>发动机维修</td>
+                        <td class="tal">
+                            1，接待室面积不小于20㎡，整洁明亮，并有供客户休息的措施。<br/>
+                            2，生产厂房面积不低于100㎡。<br/>
+                            3，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>车身维修</td>
+                        <td class="tal">
+                            1，接待室面积不小于20㎡，整洁明亮，并有供客户休息的措施。<br/>
+                            2，生产厂房面积不低于120㎡。<br/>
+                            3，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>电气系统维修</td>
+                        <td class="tal">
+                            1，接待室面积不小于20㎡，整洁明亮，并有供客户休息的措施。<br/>
+                            2，生产厂房面积不低于100㎡。<br/>
+                            3，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>自动变速器维修</td>
+                        <td class="tal">
+                            1，接待室面积不小于20㎡，整洁明亮，并有供客户休息的措施。<br/>
+                            2，生产厂房面积不低于200㎡。<br/>
+                            3，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>轮胎动平衡及维修</td>
+                        <td class="tal">
+                            1，生产厂房面积不低于15㎡。<br/>
+                            2，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>四轮定位检测调整</td>
+                        <td class="tal">
+                            1，生产厂房面积不低于40㎡。<br/>
+                            2，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>汽车润滑与养护</td>
+                        <td class="tal">
+                            1，生产厂房面积不低于40㎡。<br/>
+                            2，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>喷油泵和喷油器维修</td>
+                        <td class="tal">
+                            1，生产厂房面积不低于30㎡。<br/>
+                            2，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>汽车美容装潢</td>
+                        <td class="tal">
+                            1，生产厂房面积不低于40㎡。<br/>
+                            2，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>汽车玻璃安装及修复</td>
+                        <td class="tal">
+                            1，生产厂房面积不低于30㎡。<br/>
+                            2，停车场面积不小于30㎡，区域界定标志明显，地面平整坚实，不得占用道路和公共场所，并符合安全生产、消防等各项要求。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            说明：1，申报多个专项的，其生产厂房的面积条件要进行累加计算。2，租赁场地的，其租赁期限不得少于一年。
+                        </td>
+                    </tr>
+                </table>
+                <p v-if="explainType===3" style="line-height:30px;">维修人员说明</p>
+                <table class="explainTable" border="1" v-if="explainType===3">
+                    <tr>
+                        <th width="120">经营范围</th>
+                        <th width="250">人员条件</th>
+                        <th>备注</th>
+                    </tr>
+                    <tr>
+                        <td>汽车综合小修</td>
+                        <td class="tal">
+                            1，维修质量检测员，机修人员和电器维修人员各不少于1人。<br/>
+                            2，应有维修技术负责人、维修业务员、维修价格结算员。<br/>
+                        </td>
+                        <td rowspan="13">
+                            1，技术负责人员。一是具有机动车维修或者相关专业大专以上学历，或者具有机动车维修或者相关中级以上专业技术职称，二是熟悉机动车维修业务，掌握机动车维修及相关政策法规和技术规范。<br>
+                            2，质量检验人员。一是具有高中以上学历，二是熟悉机动车维修检测作业规范，掌握机动车维修故障诊断和质量检验的相关技术，熟悉机动车维修服务收费标准及相关政策法规和技术规范。<br>
+                            3，从事机修、电器、钣金、涂漆、车辆技术评估(含检测)作业的技术人员。一是具有初中以上学历，二是熟悉所从事工种的维修技术和操作规范，并了解机动车维修及相关政策法规。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>发动机维修</td>
+                        <td class="tal">
+                            1，维修质量检验员不少于2名，机修人员不少于2名。<br/>
+                            2，应有维修技术负责人、电器维修人员、维修业务员、维修价格结算员。<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>车身维修</td>
+                        <td class="tal">
+                            1，维修质量检验员不少于1名，钣金人员及涂漆人员各不少于2名。<br/>
+                            2，应有维修技术负责人、机修人员、维修业务员、维修价格结算员。<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>电气系统维修</td>
+                        <td class="tal">
+                            1，维修质量检验员不少于1名，电器维修人员不少于2名。<br/>
+                            2，应配备维修技术负责人、维修业务员、维修价格结算员。<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>自动变速器维修</td>
+                        <td class="tal">
+                            1，维修质量检验员不少于1名。<br/>
+                            2，应配备维修技术负责人、维修业务员、维修价格结算员。<br/>
+                            3，自动变速器专业主修人员不少于2名。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>轮胎动平衡及修补</td>
+                        <td class="tal">
+                            至少1名轮胎动平衡及修补维修人员
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>汽车玻璃安装及修复</td>
+                        <td class="tal">
+                            至少1名汽车玻璃安装及修复维修人员
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>四轮定位检测调整</td>
+                        <td class="tal">
+                            至少1名四轮定位检测调整维修人员
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>汽车润滑与养护</td>
+                        <td class="tal">
+                            至少1名轮汽车润滑与养护维修人员
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>喷油泵和喷油器维修</td>
+                        <td class="tal">
+                            至少1名柴油机高压油泵维修人员
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>汽车美容装潢</td>
+                        <td class="tal">
+                            至少1名维修人员，2名车身清洁人员
+                        </td>
+                    </tr>
+                </table>
+                <p v-if="explainType===4" style="line-height:30px;">维修管理制度说明</p>
+                <table class="explainTable" border="1" v-if="explainType===4">
+                    <tr>
+                        <td width="120">组织管理机构</td>
+                        <td class="tal">
+                            设置设计以下10个方面的管理部门(部门可单独或合并设置)：<br/>
+                            经营管理、技术管理、生产管理、业务管理、质量管理、检验管理、设备管理、配件管理、档案管理、安全环保管理<br/>
+                            (要求提供书面的部门设置说明书，内容主要包括部门名称、部门职能、部门负责人姓名及其身份证号码。)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="120">质量管理制度</td>
+                        <td class="tal">
+                            制定涉及以下9个方面的质量管理制度(各项可合并制定)：<br/>
+                            维修质量承诺、进出场登记及检验、竣工出厂合格证管理、维修档案管理、标准和计量管理、设备管理、配件管理、文件资料管理、人员培训<br/>
+                            (要求提供各项制度的文本)<br/>
+                            其中：<br/>
+                            (1)配件管理制度应明确如下6个方面的要求：<br/>
+                            配件采购、检查验收、库房管理、配件登记及记账、索赔、信息追溯<br>
+                            (2)维修档案管理制度应明确以下7类资料的管理要求：<br/>
+                            维修合同、维修结算清单、材料清单、竣工出厂合格制度、进厂检验记录、过程检验记录、竣工检验记录<br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="120">经营管理制度</td>
+                        <td class="tal">
+                            制定涉及以下5个方面的经营管理制度(各项可合并制定)：<br/>
+                            价格备案及公示制度、维修合同制度、结算清单制度、维修记录制度、统计信息报送制度<br/>
+                            制定涉及以下3项业务工作流程：业务受理流程、服务承诺、用户抱怨受理程序(要求提供各项制度、流程的文本)<br/>
+                            维修工时费备案<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="120">安全环保制度</td>
+                        <td class="tal">
+                            制定以下3项安全环保制度：安全生产管理制度、安全生产事故应急预案、环境保护管理制度<br/>
+                            (要求提供各项制度、预案的文本)<br/>
+                            对于从事危险货物运输车辆维修的企业，还应制度：<br/>
+                            (1)相应维修项目的安全操作规程<br/>
+                            (2)突发事件应急预案(要求含有报告程序、应急指挥以及处置措施)<br/>
+                        </td>
+                    </tr>
+                </table>
+                 <p v-if="explainType===5" style="line-height:30px;">维修管理制度说明</p>
+                <table class="explainTable" border="1" v-if="explainType===5">
+                    <tr>
+                        <td width="120">管理制度</td>
+                        <td class="tal">
+                            (1) 制度涉及以下6个方面的管理制度(各项制度可合并并制定)：质量管理、安全生产管理、车辆维修档案管理、人员培训制度、设备管理、配件管理<br/>
+                            (2) 制度以下3项业务工作流程：业务受理程序、服务承诺、用户抱怨受理程序(要求提供各项制度、流程的文本)<br/>
+                            (3) 提供维修工时费备案表
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="120">其他专项要求</td>
+                        <td class="tal">
+                            对于申请汽车美容装潢专项的，应提供环保部门的相关登记文书或许可证件：<br/>
+                            对于申请从事汽车综合小修、发动机维修、车身维修、电气系统维修、自动变速器维修的，还需符合如下要求：<br/>
+                            (1) 设置设计以下10个生产管理岗位(个岗位可兼职):
+                            技术负责、业务受理、质量检验、文件质量管理、材料管理、仪器设备管理、价格结算、安全生产管理<br>
+                            (要求提供书面的岗位说明书，内容包括岗位名称、岗位职责、岗位负责人姓名及其身份证号码。)<br>
+                            (2) 制度以下2项管理制度：进出场登记及检验制度、标准和计量管理制度(要求提供各项制度的文本)<br>
+                        </td>
+                    </tr>
+                </table>
+                <p v-if="explainType===6" style="line-height:30px;">维修管理制度说明</p>
+                <div v-if="explainType===6">
+                    <p>具备质量管理制度、安全生产管理制度、车辆维修档案管理制度、人员培训制度、设备管理制度及配件管理制度，并上墙公示。</p>
+                    <p>价格管理：</p>
+                    <p>1,按全市统一样式向主管部门报备维修工时费；</p>
+                    <p>2,在客户接待区域，按全市统一样式公示维修工时费表和主要零件配价目表。</p>
+                    <p>安全生产要求：</p>
+                    <p>1,维修车间不得与员工宿舍在同一座建筑物内，并应当与员工宿舍保持安全距离。</p>
+                    <p>2,具备有效的消防安全设施。</p>
+                </div>
+            </div>
+        </model>
+    </div>
+</template>
+
+<script>
+import Model from '@/components/Modal.vue'
+// import { getCookie, setCookie, cleanCookie } from '@/assets/js/utils.js'
+import { setInterval, clearInterval } from 'timers'
+import iconPdf from '@/assets/images/icon-pdf.png'
+import iconDoc from '@/assets/images/word.png'
+export default {
+    data () {
+        return {
+            btnForbidden: false,
+            loading: false,
+            explainType: 1,
+            showExplain: false,
+            iconDoc,
+            radio: '0',
+            tabIndex: 'tab1',
+            otherList1: [
+                {
+                    orderNumber: '01',
+                    detectEquipmentName: '高压水枪',
+                    equipmentCount: 0
+                },
+                {
+                    orderNumber: '02',
+                    detectEquipmentName: '钣金设备',
+                    equipmentCount: 0
+                },
+                {
+                    orderNumber: '03',
+                    detectEquipmentName: '修护设备1',
+                    equipmentCount: 0
+                }
+            ],
+            otherList2: [],
+            otherList3: [],
+            otherList4: [],
+            otherList5: [],
+            isEdit: false,
+            recordCode: '', // 备案编号
+            ruleForm: {
+                enterpriseIsOwnerPaintRoom: 0,
+                signboardProductMethod: '',
+                enterpriseName: '',
+                type: 1,
+                enterpriseSecurityName: '',
+                enterpriseLegalRepresentative: '',
+                enterpriseCreditIdentifier: '',
+                enterpriseArea: '',
+                enterpriseDetailedAddress: '',
+                enterpriseOwner: '',
+                enterpriseOwnerPhone: '',
+                enterpriseOwnerEmail: '',
+                enterpriseLinkName: '',
+                enterpriseBusinessType: '',
+                enterpriseBusinessCategory: '',
+                enterpriseChainOrGroupIs: '',
+                enterpriseOperatingType: '',
+                enterpriseEconomicCategory: '',
+                enterpriseOwnerIdcardnumber: '',
+                enterpriseOperationAreaS: [],
+                basEnterpriseMaterials: []
+            },
+            imgList: [
+                {
+                    name: '企业信息',
+                    show: true,
+                    hasExplain: true,
+                    explainType: 1,
+                    list: [
+                        {
+                            type: 1,
+                            limit: 1,
+                            url: [],
+                            show: true,
+                            text: '营业执照（副本）扫描件（最多1张）'
+                        },
+                        {
+                            type: 2,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '法人代表身份证扫描件'
+                        },
+                        {
+                            type: 3,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            tipText: '1,生产作业厂房面积不少于80㎡<br>2,租赁场地的，其租赁期限不得少于一年',
+                            text: '经营场地、停车场面积、土地使用权及产权证明等相关材料'
+                        },
+                        {
+                            type: 4,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '现场铺面正面照（含招牌）'
+                        },
+                        {
+                            type: 5,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '现场铺面内部照'
+                        }
+                    ]
+                },
+                {
+                    name: '员工信息',
+                    show: true,
+                    hasFile: true,
+                    fileSrc: '/downloadFlie/一二类汽车维修技术人员汇总表模板.xlsx',
+                    fileName: '下载技术人员汇总表模板',
+                    hasExplain: true,
+                    explainType: 3,
+                    list: [
+                        {
+                            type: 6,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '技术人员汇总表，以及各相关人员的学历、技术职称或职业资格证明等相关材料'
+                        },
+                        {
+                            type: 30,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            tipText: '1,应至少一名机修，电器，钣金或喷漆的维修技术人员<br>2,属一类业户的，还应至少配备一名质量检验员',
+                            text: '员工汇总表'
+                        },
+                        {
+                            type: 31,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '员工身份证'
+                        },
+                        {
+                            type: 32,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '相关学历证明技术职称或职业资格证明'
+                        }
+                    ]
+                },
+                {
+                    name: '设施设备信息',
+                    show: true,
+                    list: [
+                        {
+                            type: 7,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '维修设备设施汇总表，维修检测设备及计量设备检定合格证明等相关材料'
+                        },
+                        // {
+                        //     type: 33,
+                        //     limit: 10,
+                        //     url: [],
+                        //     show: true,
+                        //     text: '设施设备汇总表'
+                        // },
+                        {
+                            type: 34,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '维修检测设备及计量设备检定合格证明等相关材料'
+                        }
+                    ]
+                },
+                {
+                    name: '维修管理制度',
+                    show: true,
+                    hasExplain: true,
+                    explainType: 4,
+                    hasFile: true,
+                    fileSrc: '/downloadFlie/深圳市机动车维修工时费模板.xls',
+                    fileName: '下载维修工时费价格单模板',
+                    list: [
+                        {
+                            type: 8,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '组织管理制度'
+                        },
+                        {
+                            type: 9,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '质量管理制度'
+                        },
+                        {
+                            type: 10,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '经营管理制度'
+                        },
+                        {
+                            type: 11,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '安全环保制度'
+                        },
+                        {
+                            type: 12,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '管理制度'
+                        },
+                        {
+                            type: 13,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '其他专项要求'
+                        },
+                        {
+                            type: 14,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '价格管理制度'
+                        },
+                        {
+                            type: 15,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '安全生产管理制度'
+                        },
+                        {
+                            type: 35,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '维修工时费价格单'
+                        },
+                        {
+                            type: 36,
+                            limit: 30,
+                            url: [],
+                            show: true,
+                            text: '门店项目价格表'
+                        }
+                    ]
+                },
+                {
+                    name: '环境保护措施',
+                    show: true,
+                    hasFile: true,
+                    fileSrc: '/downloadFlie/承诺书模板下载.xlsx',
+                    fileName: '下载承诺书模板',
+                    list: [
+                        // {
+                        //     type: 9,
+                        //     limit: 10,
+                        //     url: [],
+                        //     show: true,
+                        //     text: '环境保护措施等相关材料'
+                        // },
+                        {
+                            type: 16,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '环境影响报告表'
+                        },
+                        {
+                            type: 17,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '环境影响登记表'
+                        },
+                        {
+                            type: 18,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '外协漆房合同'
+                        },
+                        {
+                            type: 19,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '固体废物、废油回收点'
+                        },
+                        {
+                            type: 20,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '固体废物承诺书'
+                        },
+                        {
+                            type: 21,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '废油回收承诺书'
+                        }
+                    ]
+                },
+                {
+                    name: '危险货物运输车辆经营材料',
+                    show: true,
+                    list: [
+                        {
+                            type: 22,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '与其作业内容相适应的专用维修车间和设备、设施等相关材料'
+                        },
+                        {
+                            type: 23,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '突发事件应急预案'
+                        },
+                        {
+                            type: 24,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '安全管理人员汇总表'
+                        },
+                        {
+                            type: 25,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '安全操作规程材料'
+                        }
+                    ]
+                },
+                {
+                    name: '连锁维修经营材料',
+                    show: true,
+                    list: [
+                        {
+                            type: 26,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '连锁经营协议书副本'
+                        },
+                        {
+                            type: 27,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '连锁经营的作业标准和管理手册'
+                        },
+                        {
+                            type: 28,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '连锁经营服务网点符合机动车维修经营相应条件承诺书'
+                        }
+                    ]
+                },
+                {
+                    name: '其他',
+                    show: true,
+                    list: [
+                        {
+                            type: 29,
+                            limit: 10,
+                            url: [],
+                            show: true,
+                            text: '消防设施照片'
+                        }
+                    ]
+                }
+            ],
+            rules: {
+                enterpriseName: [
+                    { required: true, message: '请输入经营者名称', trigger: 'change' }
+                ],
+                enterpriseCreditIdentifier: [
+                    { required: true, message: '请输入社会信用代码', trigger: 'change' }
+                ],
+                enterpriseArea: [
+                    { required: true, message: '请选择所在区域', trigger: 'change' }
+                ],
+                enterpriseDetailedAddress: [
+                    { required: true, message: '请输入详细地址', trigger: 'change' }
+                ],
+                enterpriseOperatingType: [
+                    { required: true, message: '请选择经营类型', trigger: 'change' }
+                ],
+                enterpriseOwner: [
+                    { required: true, message: '请输入主要负责人姓名', trigger: 'change' }
+                ],
+                enterpriseOwnerPhone: [
+                    { required: true, message: '请输入主要负责人联系电话', trigger: 'change' }
+                ],
+                enterpriseOwnerIdcardnumber: [
+                    { required: true, message: '请输入主要负责人身份证号码', trigger: 'change' }
+                ],
+                enterpriseOwnerEmail: [
+                    { required: false, message: '请输入主要负责人邮箱/传真', trigger: 'change' }
+                ],
+                enterpriseLinkName: [
+                    { required: false, message: '请输入经办人联系电话', trigger: 'change' }
+                ]
+            },
+            recordChangeForm: {
+                entName: '',
+                verifCode: ''
+            },
+            changeRules: {
+                enterpriseName: [
+                    { required: true, message: '请输入维修企业名称', trigger: 'change' }
+                ],
+                code: [
+                    { required: true, message: '请输入验证码', trigger: 'change' }
+                ]
+            },
+            uploadURL: window.uploadURL,
+            regionList: [ // 区域列表
+            ],
+            currentStep: 1, // 当前进度
+            dialogVisible: false, // 图片预览框
+            dialogImageUrl: '', // 预览图片地址
+            statementChecked: true, // 是否同意用户须知
+            alert: false, // 备案变更弹窗
+            countDowntime: 10,
+            codeMsg: '发送验证码', // 验证码按钮文字
+            isGetCode: false, // 是否已发送验证码
+            time: '', // 短信定时器
+            interval: '', // 定时器
+            iconPdf, // 默认pdf图标
+            previewVisible: false, // pdf预览弹窗
+            previewSrc: '' // 预览pdf路径
+        }
+    },
+    components: {
+        Model
+    },
+    watch: {
+        'ruleForm.enterpriseBusinessCategory' (val) {
+            this.ruleForm.enterpriseOperationAreaS = []
+            if (val === 3) {
+                this.ruleForm.enterpriseIsOwnerPaintRoom = 0
+            } else {
+                this.ruleForm.enterpriseIsOwnerPaintRoom = 1
+            }
+        },
+        'ruleForm.enterpriseBusinessType' (val) {
+            if (val === 2) {
+                this.ruleForm.enterpriseOperationAreaS = []
+            }
+        }
+    },
+    created () {
+        this.getRegion()
+    },
+    destroyed () {
+        this.interval && clearInterval(this.interval)
+    },
+    methods: {
+        openDoc (item) {
+            window.open(item.materialUrl)
+            // window.open('http://192.168.1.152:8081/vmts-association/external/download/getBasEntMaterial?sftpUrl=' + item.materialUrl)
+        },
+        getOhterList (params) {
+            // external/enterprise/conditions/template/list
+            this.loading = true
+            this.$post('external/enterprise/recordconditions/template/list', params)
+                .then(res => {
+                    this.loading = false
+                    if (res.status === 200) {
+                        this.otherList3 = res.data.data.busEntrecordDetectEquipments || []
+                        this.otherList1 = res.data.data.busEntrecordMotorEquipments || []
+                        this.otherList2 = res.data.data.busEntrecordSpecialEquipments || []
+                        this.otherList5 = res.data.data.busEntrecordThreeclassEquipments || []
+                        this.otherList4 = res.data.data.busEntrecordUniversalEquipments || []
+                        if (this.otherList1.length) {
+                            this.tabIndex = 'tab1'
+                        } else if (this.otherList2.length) {
+                            this.tabIndex = 'tab2'
+                        } else if (this.otherList3.length) {
+                            this.tabIndex = 'tab3'
+                        } else if (this.otherList4.length) {
+                            this.tabIndex = 'tab4'
+                        } else {
+                            this.tabIndex = 'tab5'
+                        }
+                    } else {
+                        this.$alert(res.message, '提示')
+                    }
+                })
+        },
+        showsExplainA (type) {
+            this.explainType = type
+            this.showExplain = true
+        },
+        // 获取城市区域
+        getRegion () {
+            this.$post('bas/city/findLoginRegion', {})
+                .then(res => {
+                    if (res.status === 200) {
+                        this.regionList = res.datas
+                    } else {
+                        this.$alert(res.message, '提示')
+                    }
+                })
+        },
+        // 下一步操作
+        nextStep () {
+            if (this.btnForbidden) {
+                return
+            }
+            if (!this.statementChecked) {
+                return
+            }
+            this.$refs.ruleForm.validate((err, obj) => {
+                if (this.currentStep === 1) {
+                    // 根据不同的项目类别，上传的图片要求不同
+                    this.imgList.forEach(e => {
+                        e.list.forEach(r => {
+                            if (r.text === '环境影响登记表') {
+                                if (this.ruleForm.enterpriseOperationAreaS.includes('汽车美容装潢') && !this.ruleForm.enterpriseOperationAreaS.includes('车身维修')) {
+                                    r.show = true
+                                } else {
+                                    r.show = false
+                                }
+                            }
+                            if (r.text === '外协漆房合同') {
+                                if (this.ruleForm.enterpriseIsOwnerPaintRoom === 2) {
+                                    r.show = true
+                                } else {
+                                    r.show = false
+                                }
+                            }
+                            if (this.ruleForm.enterpriseChainOrGroupIs === 2) {
+                                r.text === '连锁经营协议书副本' && (r.show = true)
+                                r.text === '连锁经营的作业标准和管理手册' && (r.show = true)
+                                r.text === '连锁经营服务网点符合机动车维修经营相应条件承诺书' && (r.show = true)
+                            } else {
+                                r.text === '连锁经营协议书副本' && (r.show = false)
+                                r.text === '连锁经营的作业标准和管理手册' && (r.show = false)
+                                r.text === '连锁经营服务网点符合机动车维修经营相应条件承诺书' && (r.show = false)
+                            }
+                            if (this.ruleForm.enterpriseOperationAreaS.includes('危险货物运输车辆维修')) {
+                                r.text === '与其作业内容相适应的专用维修车间和设备、设施等相关材料' && (r.show = true)
+                                r.text === '突发事件应急预案' && (r.show = true)
+                                r.text === '安全管理人员汇总表' && (r.show = true)
+                                r.text === '安全操作规程材料' && (r.show = true)
+                            } else {
+                                r.text === '与其作业内容相适应的专用维修车间和设备、设施等相关材料' && (r.show = false)
+                                r.text === '突发事件应急预案' && (r.show = false)
+                                r.text === '安全管理人员汇总表' && (r.show = false)
+                                r.text === '安全操作规程材料' && (r.show = false)
+                            }
+                            if (this.ruleForm.enterpriseBusinessCategory === 1 || this.ruleForm.enterpriseBusinessCategory === 2 || this.ruleForm.enterpriseOperationAreaS.includes('汽车综合小修') || this.ruleForm.enterpriseOperationAreaS.includes('发动机维修') || this.ruleForm.enterpriseOperationAreaS.includes('自动变速器维修') || this.ruleForm.enterpriseOperationAreaS.includes('汽车润滑与养护') || this.ruleForm.enterpriseOperationAreaS.includes('喷油泵喷油器维修')) {
+                                r.text === '废油回收承诺书' && (r.show = true)
+                            } else {
+                                r.text === '废油回收承诺书' && (r.show = false)
+                            }
+                            if (this.ruleForm.enterpriseBusinessType === 2) {
+                                r.text === '组织管理制度' && (r.show = false)
+                                r.text === '质量管理制度' && (r.show = true)
+                                r.text === '经营管理制度' && (r.show = false)
+                                r.text === '安全环保制度' && (r.show = false)
+                                r.text === '管理制度' && (r.show = false)
+                                r.text === '其他专项要求' && (r.show = false)
+                                r.text === '价格管理制度' && (r.show = true)
+                                r.text === '安全生产管理制度' && (r.show = true)
+                            } else if (this.ruleForm.enterpriseBusinessCategory === 3) {
+                                r.text === '组织管理制度' && (r.show = false)
+                                r.text === '质量管理制度' && (r.show = false)
+                                r.text === '经营管理制度' && (r.show = false)
+                                r.text === '安全环保制度' && (r.show = false)
+                                r.text === '管理制度' && (r.show = true)
+                                r.text === '其他专项要求' && (r.show = true)
+                                r.text === '价格管理制度' && (r.show = false)
+                                r.text === '安全生产管理制度' && (r.show = false)
+                            } else {
+                                r.text === '组织管理制度' && (r.show = true)
+                                r.text === '质量管理制度' && (r.show = true)
+                                r.text === '经营管理制度' && (r.show = true)
+                                r.text === '安全环保制度' && (r.show = true)
+                                r.text === '管理制度' && (r.show = false)
+                                r.text === '其他专项要求' && (r.show = false)
+                                r.text === '价格管理制度' && (r.show = false)
+                                r.text === '安全生产管理制度' && (r.show = false)
+                            }
+                            if (this.ruleForm.enterpriseBusinessType === 2) {
+                                r.text === '环境影响报告表' && (r.show = false)
+                                r.text === '维修设备设施汇总表，维修检测设备及计量设备检定合格证明等相关材料' && (r.show = false)
+                                // r.text === '设施设备汇总表' && (r.show = true)
+                                r.text === '维修检测设备及计量设备检定合格证明等相关材料' && (r.show = true)
+                                r.text === '技术人员汇总表，以及各相关人员的学历、技术职称或职业资格证明等相关材料' && (r.show = false)
+                                r.text === '员工汇总表' && (r.show = true)
+                                r.text === '员工身份证' && (r.show = true)
+                                r.text === '相关学历证明技术职称或职业资格证明' && (r.show = true)
+                                r.text === '门店项目价格表' && (r.show = false)
+                            } else {
+                                r.text === '环境影响报告表' && (r.show = true)
+                                r.text === '维修设备设施汇总表，维修检测设备及计量设备检定合格证明等相关材料' && (r.show = true)
+                                // r.text === '设施设备汇总表' && (r.show = false)
+                                r.text === '维修检测设备及计量设备检定合格证明等相关材料' && (r.show = false)
+                                r.text === '技术人员汇总表，以及各相关人员的学历、技术职称或职业资格证明等相关材料' && (r.show = true)
+                                r.text === '员工汇总表' && (r.show = false)
+                                r.text === '员工身份证' && (r.show = false)
+                                r.text === '相关学历证明技术职称或职业资格证明' && (r.show = false)
+                                r.text === '门店项目价格表' && (r.show = true)
+                            }
+                            if (r.text === '环境影响报告表') {
+                                if (this.ruleForm.enterpriseOperationAreaS.includes('车身维修') || this.ruleForm.enterpriseIsOwnerPaintRoom === 1) {
+                                    r.show = true
+                                } else {
+                                    r.show = false
+                                }
+                            }
+                        })
+                        if (this.ruleForm.enterpriseChainOrGroupIs === 2) {
+                            e.name === '连锁维修经营材料' && (e.show = true)
+                        } else {
+                            e.name === '连锁维修经营材料' && (e.show = false)
+                        }
+                        if (this.ruleForm.enterpriseOperationAreaS.includes('危险货物运输车辆维修')) {
+                            e.name === '危险货物运输车辆经营材料' && (e.show = true)
+                        } else {
+                            e.name === '危险货物运输车辆经营材料' && (e.show = false)
+                        }
+                        if (this.ruleForm.enterpriseBusinessType === 2) {
+                            e.name === '员工信息' && (e.fileSrc = '/downloadFlie/摩托车维修企业人员汇总表模板.xlsx')
+                        } else if (this.ruleForm.enterpriseBusinessCategory === 3) {
+                            e.name === '员工信息' && (e.fileSrc = '/downloadFlie/三类汽车维修技术人员汇总表模板.xlsx')
+                        } else {
+                            e.name === '员工信息' && (e.fileSrc = '/downloadFlie/一二类汽车维修技术人员汇总表模板.xlsx')
+                        }
+                        if (this.ruleForm.enterpriseBusinessCategory === 3) {
+                            e.name === '员工信息' && (e.hasExplain = true)
+                            e.name === '企业信息' && (e.explainType = 2)
+                            e.name === '维修管理制度' && (e.explainType = 5)
+                        } else {
+                            e.name === '员工信息' && (e.hasExplain = false)
+                            if (this.ruleForm.enterpriseBusinessType === 2) {
+                                e.name === '员工信息' && (e.hasExplain = false)
+                            }
+                            e.name === '企业信息' && (e.explainType = 1)
+                            if (this.ruleForm.enterpriseBusinessType === 2) {
+                                e.name === '维修管理制度' && (e.explainType = 6)
+                            } else {
+                                e.name === '维修管理制度' && (e.explainType = 4)
+                            }
+                        }
+                        if (this.ruleForm.enterpriseBusinessType === 2) {
+                            e.name === '企业信息' && (e.hasExplain = false)
+                        } else {
+                            e.name === '企业信息' && (e.hasExplain = true)
+                        }
+                    })
+                }
+                if (this.currentStep === 2) {
+                    // 请求设备选取的数据
+                    // let params = {
+                    //     busType: this.ruleForm.enterpriseBusinessType,
+                    //     busCategory: this.ruleForm.enterpriseBusinessCategory,
+                    //     projTypes: this.ruleForm.enterpriseOperationAreaS
+                    // }
+                    // this.getOhterList(params)
+                }
+                if (this.currentStep === 3) {
+                }
+                this.ruleForm.enterpriseSource = 3
+                if (this.currentStep === 4 && !this.isEdit) {
+                    // 第一步校验
+                    if (!err) {
+                        this.$alert('请填写完整的的企业信息', '提示')
+                        return
+                    }
+                    // 第二部校验
+                    this.ruleForm.basEnterpriseMaterials = []
+                    let forbidden = false
+                    this.imgList.forEach(e => {
+                        e.list.forEach(r => {
+                            if (r.url.length === 0 && r.show && e.show) {
+                                this.$alert('请上传完整的图片', '提示')
+                                forbidden = true
+                            }
+                            if (r.url.length > 0 && r.show) {
+                                this.ruleForm.basEnterpriseMaterials = this.ruleForm.basEnterpriseMaterials.concat(r.url)
+                            }
+                        })
+                    })
+                    if (forbidden) return
+                    // 第三部校验
+                    // 设备列表 校验。。。。。。。。。。。。。。。。。
+                    // 摩托
+                    for (let i = 0; i < this.otherList2.length; i++) {
+                        this.$set(this.otherList2[i], 'error', false)
+                        if (this.otherList2[i].specialEquipmentName.indexOf('汽车举升机') !== -1) {
+                            if (this.ruleForm.enterpriseBusinessCategory === 2 && this.otherList2[i].equipmentCount < 2) {
+                                this.$set(this.otherList2[i], 'error', true)
+                                this.$alert('汽车举升机的数量不能少于2个', '提示')
+                                return
+                            }
+                            if (this.ruleForm.enterpriseBusinessCategory === 1 && this.otherList2[i].equipmentCount < 5) {
+                                this.$set(this.otherList2[i], 'error', true)
+                                this.$alert('汽车举升机的数量不能少于5个', '提示')
+                                return
+                            }
+                        }
+                        if (!this.otherList2[i].equipmentCount) {
+                            if (this.otherList2[i].otherCondition === '允许外协') continue
+                            if (this.otherList2[i].otherCondition === '二类允许外协' && this.ruleForm.enterpriseBusinessCategory === 2) continue
+                            if (this.otherList2[i].otherCondition === '大货车允许外协' && this.ruleForm.enterpriseOperationAreaS.includes('大型货车')) continue
+                            if (this.otherList2[i].otherCondition === '大中型客车允许外协' && this.ruleForm.enterpriseOperationAreaS.includes('大中型客车')) continue
+                            this.$set(this.otherList2[i], 'error', true)
+                            this.$alert(`“${this.otherList2[i].specialEquipmentName}”的数量不能少于1个`, '提示')
+                            return
+                        }
+                    }
+                    for (let i = 0; i < this.otherList3.length; i++) {
+                        this.$set(this.otherList3[i], 'error', false)
+                        if (!this.otherList3[i].equipmentCount) {
+                            this.$set(this.otherList3[i], 'error', true)
+                            this.$alert(`“${this.otherList3[i].detectEquipmentName}”的数量不能少于1个`, '提示')
+                            return
+                        }
+                    }
+                    for (let i = 0; i < this.otherList1.length; i++) {
+                        this.$set(this.otherList1[i], 'error', false)
+                        if (this.otherList1[i].detectEquipmentName.indexOf('举升作业平台') !== -1) {
+                            if (this.ruleForm.enterpriseBusinessCategory === 1 && this.otherList1[i].equipmentCount < 3) {
+                                this.$set(this.otherList1[i], 'error', true)
+                                this.$alert('举升作业平台的数量不能少于3个', '提示')
+                                return
+                            }
+                        }
+                        if (!this.otherList1[i].equipmentCount) {
+                            if (this.otherList1[i].detectEquipmentName.indexOf('一类必备') !== -1 && this.ruleForm.enterpriseBusinessCategory === 2) continue
+                            if (this.otherList1[i].detectEquipmentName.indexOf('一类要求，允许外协') !== -1) continue
+                            this.$set(this.otherList1[i], 'error', true)
+                            this.$alert(`“${this.otherList1[i].detectEquipmentName}”的数量不能少于1个`, '提示')
+                            return
+                        }
+                    }
+                    for (let i = 0; i < this.otherList4.length; i++) {
+                        this.$set(this.otherList4[i], 'error', false)
+                        if (!this.otherList4[i].equipmentCount) {
+                            this.$set(this.otherList4[i], 'error', true)
+                            this.$alert(`“${this.otherList4[i].universalEquipmentName}”的数量不能少于1个`, '提示')
+                            return
+                        }
+                    }
+                    // 三类
+                    for (let i = 0; i < this.otherList5.length; i++) {
+                        this.$set(this.otherList5[i], 'error', false)
+                        if (!this.otherList5[i].equipmentCount) {
+                            if (this.otherList5[i].universalEquipmentName.indexOf('允许外协') !== -1) continue
+                            this.$set(this.otherList5[i], 'error', true)
+                            this.$alert(`“${this.otherList5[i].universalEquipmentName}”的数量不能少于1个`, '提示')
+                            return
+                        }
+                    }
+                    this.ruleForm.busEntrecordThreeclassEquipments = this.otherList5
+                    this.ruleForm.busEntrecordUniversalEquipments = this.otherList4
+                    this.ruleForm.busEntrecordDetectEquipments = this.otherList3
+                    this.ruleForm.busEntrecordSpecialEquipments = this.otherList2
+                    this.ruleForm.busEntrecordMotorEquipments = this.otherList1
+                    console.log('提交')
+                    this.ruleForm.enterpriseOperationArea = this.ruleForm.enterpriseOperationAreaS.join(',')
+                    this.ruleForm.enterpriseRecordType = 0
+                    this.btnForbidden = true
+                    this.$post('external/enterpriseFiling/submitEntFiling', this.ruleForm).then(res => {
+                        this.btnForbidden = false
+                        if (res.status === 200) {
+                            this.recordCode = res.data
+                            this.interval = setInterval(() => {
+                                if (this.countDowntime <= 0) {
+                                    clearInterval(this.interval)
+                                    this.$router.push('/home')
+                                    return
+                                }
+                                this.countDowntime--
+                            }, 1000)
+                            this.currentStep = 5
+                        } else {
+                            this.$alert(res.message, '提示')
+                        }
+                    }).catch(() => { this.btnForbidden = false })
+                }
+                if (this.currentStep === 4 && this.isEdit) {
+                    this.ruleForm.enterpriseRecordType = 1
+                    this.ruleForm.enterpriseOperationArea = this.ruleForm.enterpriseOperationAreaS.join(',')
+                    this.btnForbidden = true
+                    this.$post('external/enterpriseFiling/submitEntFilingUpdate', this.ruleForm).then(res => {
+                        this.btnForbidden = false
+                        if (res.status === 200) {
+                            this.recordCode = res.data
+                            this.interval = setInterval(() => {
+                                if (this.countDowntime <= 0) {
+                                    clearInterval(this.interval)
+                                    this.$router.push('/home')
+                                    return
+                                }
+                                this.countDowntime--
+                            }, 1000)
+                            this.currentStep = 5
+                        } else {
+                            // this.$alert(res.message, '提示')
+                        }
+                    }).catch(() => { this.btnForbidden = false })
+                }
+                if (this.currentStep < 4) {
+                    this.currentStep++
+                }
+            })
+        },
+        // 上一步操作
+        preStep () {
+            if (this.currentStep === 3) {
+                this.$confirm('当前页面数据不会保存，是否继续？', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.currentStep = this.currentStep - 1
+                    this.statementChecked = true
+                }).catch(() => {
+                })
+            } else {
+                this.currentStep = this.currentStep - 1
+                if (this.currentStep <= 3) this.statementChecked = true
+            }
+        },
+        // 预览图片
+        handlePictureCardPreview (file) {
+            this.dialogImageUrl = file.url
+            this.dialogVisible = true
+        },
+        // 上传前的钩子
+        beforeAvatarUpload (file) {
+            const isLt5M = file.size / 1024 / 1024 < 5
+            if (!/.jpg$|.jpeg$|.png$|.pdf|.doc|.docx$/i.test(file.name)) {
+                this.$message.error('上传附件只能是 jpg/jpeg/png/pdf/doc 格式!')
+                return false
+            }
+            if (!isLt5M) {
+                this.$message.error('上传附件大小不能超过 5MB!')
+                return false
+            }
+            return isLt5M
+        },
+        // 上传成功的回调
+        uploadSuccess (res, objIndex, index, type, file) {
+            if (/.docx$/.test(file.name)) {
+                this.imgList[objIndex].list[index].url.push({
+                    materialUrl: res.data,
+                    materialName: file.name,
+                    materialSuffix: 'docx',
+                    materialType: type
+                })
+            } else if (/.doc$/.test(file.name)) {
+                this.imgList[objIndex].list[index].url.push({
+                    materialUrl: res.data,
+                    materialName: file.name,
+                    materialSuffix: 'doc',
+                    materialType: type
+                })
+            } else {
+                this.imgList[objIndex].list[index].url.push({
+                    materialUrl: res.data,
+                    materialType: type
+                })
+            }
+        },
+        // 删除图片
+        cleanImage (objIndex, index1, index2) {
+            this.imgList[objIndex].list[index1].url.splice(index2, 1)
+        },
+        // 上传失败的回调
+        uploadError () {
+            this.$message.error('上传失败!')
+        },
+        // 上传超出限制的回调
+        uploadExceed () {
+            this.$message.error('上传文件数量已达最大限制！')
+        },
+        // 备案变更弹窗取消
+        alertCancel () {
+            this.alert = false
+        },
+        // 备案变更确认
+        alertConfirm () {
+            this.$refs.recordChangeForm.validate((err, obj) => {
+                if (!err) {
+                    return
+                }
+                this.$post('/external/enterpriseFiling/confirmVerifCode', this.recordChangeForm)
+                    .then(res => {
+                        if (res.status === 200) {
+                            this.isEdit = true
+                            // this.ruleForm = res.data
+                            this.otherList1 = res.data.busEnterpriseInstrumentTools
+                            this.otherList2 = res.data.busEnterpriseSpecialEquipments
+                            this.otherList3 = res.data.busEnterpriseDetectEquipments
+                            this.otherList4 = res.data.busEnterpriseUniversalEquipments
+                            res.data.enterpriseBusinessCategory = res.data.enterpriseBusinessCategory - 0
+                            res.data.enterpriseBusinessType = res.data.enterpriseBusinessType - 0
+                            res.data.enterpriseChainOrGroupIs = res.data.enterpriseChainOrGroupIs - 0
+                            res.data.enterpriseEconomicCategory = res.data.enterpriseEconomicCategory - 0
+                            res.data.enterpriseOperatingType = res.data.enterpriseOperatingType - 0
+                            this.$nextTick(e => {
+                                res.data.enterpriseOperationAreaS = res.data.enterpriseOperationArea.split(',')
+                            })
+                            res.data.type = res.data.enterpriseLegalRepresentative ? 2 : 1
+                            this.ruleForm = res.data
+                            // 图片赋值
+                            this.imgList.forEach(e => {
+                                e.list.forEach(r => {
+                                    r.url = []
+                                })
+                            })
+                            this.imgList.forEach(e => {
+                                e.list.forEach(r => {
+                                    this.ruleForm.basEnterpriseMaterials.forEach(m => {
+                                        if (m.materialType === r.type) {
+                                            r.url.push(m)
+                                        }
+                                    })
+                                })
+                            })
+                            this.alert = false
+                        } else {
+                            this.$alert(res.message)
+                        }
+                    })
+            })
+        },
+        // 打开备案变更弹窗
+        openRecordChange () {
+            this.alert = true
+            this.oneMinuteGetCode() && this.countDown()
+        },
+        // 发送验证码
+        sendCode () {
+            if (!this.recordChangeForm.entName) {
+                this.$alert('请输入企业名称')
+                return
+            }
+            this.$post('/external/verifycode/sendSmsVerifCode', {
+                entName: this.recordChangeForm.entName
+            }).then(res => {
+                if (res.status === 200) {
+                    this.$message.success('短信发送成功')
+                    this.countDown()
+                } else {
+                    this.$alert(res.message)
+                }
+            })
+        },
+        // // 倒计时函数
+        // countDown () {
+        //     let n
+        //     if (this.oneMinuteGetCode()) {
+        //         n = this.oneMinuteGetCode()
+        //     } else {
+        //         setCookie('getRecordChangeCodeTime', (new Date() - 0) + '')
+        //         n = 59
+        //     }
+        //     this.isGetCode = true
+        //     this.codeMsg = n + '秒后重试'
+        //     this.time = setInterval(() => {
+        //         if (n <= 0) {
+        //             this.codeMsg = '发送验证码'
+        //             this.isGetCode = false
+        //             clearInterval(this.time)
+        //             return
+        //         }
+        //         n--
+        //         this.codeMsg = n + '秒后重试'
+        //     }, 1000)
+        // },
+        // // 是否一分钟内已点击过验证码
+        // oneMinuteGetCode () {
+        //     const date = new Date() - 0
+        //     const localTime = getCookie('getRecordChangeCodeTime') && new Date(getCookie('getRecordChangeCodeTime') - 0) - 0
+        //     if (localTime) {
+        //         var difference = Math.round((date - localTime) / 1000)
+        //         if (difference < 60 && difference > 0) {
+        //             return 60 - difference
+        //         } else {
+        //             cleanCookie('getRecordChangeCodeTime')
+        //             return false
+        //         }
+        //     } else {
+        //         return false
+        //     }
+        // },
+        // 业务类型变更
+        businessTypeChange (val) {
+            if (val === 2 && this.ruleForm.enterpriseBusinessCategory === 3) {
+                this.ruleForm.enterpriseBusinessCategory = 1
+                this.ruleForm.projectType = []
+            }
+        },
+        // 经营类型变更
+        enterpriseTypeChange (val) {
+            this.$refs.ruleForm.clearValidate('enterpriseLegalRepresentative')
+        },
+        // 备案模版下载
+        recordTemplateDown () {
+            if ('download' in document.createElement('a')) {
+                let a = document.createElement('a')
+                a.setAttribute('download', '备案申请表.pdf')
+                a.setAttribute('href', '备案申请表.pdf')
+                a.click()
+            } else {
+                window.open('/备案申请表.pdf')
+            }
+        },
+        // 图片预览
+        preview (url) {
+            if (/.pdf$/.test(url)) {
+                this.previewVisible = true
+                this.previewSrc = url
+            } else {
+                this.$zoomImg(url)
+            }
+        },
+        saveRecord () {
+            console.log(this.ruleForm)
+        }
+    }
+}
+</script>
+
+<style lang='less'>
+.recordApply {
+    .red {
+        color: red;
+    }
+    background: #fff;
+    margin: 24px 0;
+    padding: 40px;
+    min-height: 578px;
+    text-align: left;
+    .clear:after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 0;
+        clear: both;
+    }
+    #otherList {
+        .el-input {
+            width: 180px;
+        }
+        .textIpt {
+            height: 34px;
+            line-height: 34px;
+            border: 1px solid #ddd;
+            text-align: center;
+            width: 150px;
+            border-radius: 3px;
+        }
+    }
+     .uploadDisabled {
+        &:before {
+            position: absolute;
+            content: '';
+            width: 390px;
+            height: 100%;
+            top: 0;
+            left: 0;
+            // background: #cccccc;
+            background: rgba(0,0,0,0.1);
+            z-index: 9;
+            cursor: not-allowed;
+        }
+    }
+    .bg {
+        width: 980px;
+    }
+    .title {
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #C1C1C1;
+        .logo {
+            float: left;
+            font-size: 16px;
+            font-weight: bold;
+            color: #999;
+            img {
+                width: 35px;
+                height: 32px;
+                margin-right: 6px;
+            }
+        }
+        .btn {
+            float: right;
+            button {
+                border-radius: 4px;
+                background-color: #fff;
+                cursor: pointer;
+                outline: none;
+                width: 78px;
+                height: 30px;
+                font-size: 14px;
+            }
+            .back {
+                border: 1px solid #666;
+                color: #666;
+                img {
+                    margin-right: 10px;
+                }
+                span, img {
+                    vertical-align: middle;
+                }
+            }
+            .record-change {
+                color: #C81623;
+                border: 1px solid #C81623;
+                margin-right: 20px;
+            }
+        }
+    }
+    .steps {
+        padding: 0 0 24px 0;
+        border-bottom: 1px dashed #c1c1c1;
+        text-align: center;
+        .step-item {
+            display: inline-block;
+            text-align: center;
+            width: 84px;
+            .step-index {
+                display: inline-block;
+                width: 48px;
+                height: 48px;
+                line-height: 48px;
+                text-align: center;
+                border-radius: 50%;
+                background: #ccc;
+                color: #fff;
+                &.current {
+                    background: #409EFF;
+                }
+            }
+            .step-name {
+                color: #333;
+                font-size: 14px;
+                margin-top: 8px;
+            }
+        }
+        .step-line {
+            display: inline-block;
+            height: 1px;
+            width: 100px;
+            background: #ccc;
+            margin: 38px 10px 45px 10px;
+        }
+    }
+    .record-content {
+        padding: 24px 0;
+        .el-input {
+            width: 350px;
+            &.input-small {
+                width: 238px;
+                margin-left: 10px;
+            }
+        }
+        .el-radio__label {
+            font-weight: normal;
+        }
+        .el-checkbox {
+            margin-left: 30px;
+        }
+        .el-checkbox-group {
+            margin-left: -30px;
+        }
+        .select-small {
+            .el-input {
+                width: 100px;
+            }
+        }
+        .record-form {
+            padding-left: 30px;
+        }
+        .el-form-item__label {
+            display: block;
+            float: none;
+            text-align: left;
+        }
+        .form-item-name {
+            color: #666;
+            font-size: 14px;
+        }
+        .red {
+            color: #F56C6C;
+            &.small {
+                font-size: 12px;
+            }
+        }
+        .text9 {
+            color: #999;
+            &.small {
+                font-size: 12px;
+            }
+        }
+        .el-form-item--small.el-form-item {
+            margin-bottom: 16px;
+        }
+        .next {
+            padding: 24px;
+            border-top: 1px dashed #ccc;
+            text-align: center;
+            .next-button {
+                display: inline-block;
+                border-radius: 4px;
+                color: #fff;
+                background: #409EFF;
+                width: 160px;
+                height: 40px;
+                line-height: 40px;
+                text-align: center;
+                cursor: pointer;
+                &.disabled {
+                    background: #ccc;
+                    cursor: not-allowed;
+                }
+            }
+            .pre-button {
+                display: inline-block;
+                border-radius: 4px;
+                color: #409EFF;
+                border: 1px solid #409EFF;
+                width: 160px;
+                height: 40px;
+                line-height: 40px;
+                margin-right: 30px;
+                text-align: center;
+                cursor: pointer;
+            }
+        }
+        .other-material {
+            h5 {
+                font-size: 16px;
+                line-height: 40px;
+                background: #f5f5f5;
+                border: 1px solid #dddddd;
+                margin: 10px 0 30px;
+                padding-left: 20px
+            }
+            .upload-tips {
+                font-size: 16px;
+                color: #666;
+                margin-bottom: 24px;
+            }
+            .upload-text {
+                font-size: 14px;
+                color: #999;
+            }
+            .upload-item {
+                .el-upload {
+                    width: 390px;
+                    height: 126px;
+                    position: relative;
+                    .el-icon-plus {
+                        margin: 34px 0 10px 0;
+                        color: #666;
+                    }
+                }
+                .upload-image-list {
+                    margin: 24px 0;
+                    .upload-image-list-item {
+                        display: inline-block;
+                        margin-right: 22px;
+                        margin-bottom: 10px;
+                        position: relative;
+                        img {
+                            width: 60px;
+                            height: 60px;
+                        }
+                        .close {
+                            position: absolute;
+                            top: -9px;
+                            right: -9px;
+                            color: #E02020;
+                            font-size: 18px;
+                            cursor: pointer;
+                            background: #fff;
+                            border-radius: 50%;
+                        }
+                    }
+                }
+                .el-upload-list {
+                    display: none;
+                }
+                .el-upload--picture-card {
+                    line-height: 20px;
+                }
+            }
+        }
+        .upload-item {
+            position: relative;
+            margin-bottom: 24px;
+            .form-item-name {
+                margin-bottom: 8px;
+            }
+        }
+        .statement {
+            padding: 0px 24px 30px;
+            color: #666;
+            h4 {
+                margin-bottom: 8px;
+                font-size: 18px;
+            }
+            p {
+                margin-bottom: 18px;
+                line-height: 26px;
+                font-size: 15px;
+            }
+        }
+        .success {
+            .text {
+                padding: 16px 54px;
+                font-size: 16px;
+                color: #666;
+                width: 785px;
+                background: #FFE3E4;
+                margin: 0 auto;
+                line-height: 24px;
+                text-align: center;
+                .red {
+                    color: #E02020;
+                }
+            }
+            .time {
+                width: 88px;
+                margin: 32px auto 0 auto;
+                text-align: center;
+                line-height: 22px;
+                .num {
+                    color: #E02020;
+                    font-size: 18px;
+                }
+                .back {
+                    color: #999;
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+    .alert-content {
+        padding: 6px 24px;
+        .form-item-name {
+            color: #666;
+        }
+        .el-form-item--small.el-form-item {
+            margin-bottom: 8px;
+        }
+        .el-input {
+            width: 290px;
+            margin-right: 16px;
+        }
+        .btn {
+            margin-top: 22px;
+            text-align: center;
+            .el-button {
+                width: 98px;
+                height: 34px;
+                line-height: 34px;
+                padding: 0;
+            }
+        }
+    }
+}
+</style>

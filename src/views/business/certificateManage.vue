@@ -1,0 +1,1028 @@
+<template>
+    <div class="certificate">
+        <div class="content">
+            <tool-bar>
+                <div class="fl">
+                    <label>企业名称:</label>
+                    <el-input class="tool_ipt" v-model="queryName" placeholder="请输入内容"></el-input>
+                    <label>备案日期:</label>
+                    <el-date-picker
+                        v-model="daterange"
+                        type="daterange"
+                        align="right"
+                        unlink-panels
+                        range-separator="至"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        value-format="timestamp"
+                        >
+                    </el-date-picker>
+                </div>
+                <div class="fr">
+                    <!-- :disabled="!$checkAuth('bas:enterprise:certificate:find')" -->
+                    <el-button class="query_btn slects_btn" @click="search" >查询</el-button>
+                    <el-button class="react_btn" @click="toReact">重置</el-button>
+                </div>
+            </tool-bar>
+            <div class='wrap'>
+                <div class="table_box">
+                    <el-table
+                        :data="dataList"
+                        border
+                        height="600"
+                        :cell-style="{'text-align':'center'}"
+                        :header-cell-style="{'text-align':'center'}"
+                        :stripe="false"
+                        style="width: 100%">
+                        <el-table-column
+                            prop="num"
+                            label="序号"
+                            width="100"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="entName"
+                            label="维修企业名称"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="startNo"
+                            label="起始编号"
+                            width="150"
+                            >
+                            <!-- <template slot-scope="scope">
+                                {{scope.row.certPrefix}}NO.{{scope.row.entCode}}{{scope.row.particularYear}}{{scope.row.startNo}}
+                            </template> -->
+                        </el-table-column>
+                        <el-table-column
+                            prop="endNo"
+                            label="结束编号"
+                            width="150"
+                            >
+                            <!-- <template slot-scope="scope">
+                                {{scope.row.certPrefix}}NO.{{scope.row.entCode}}{{scope.row.particularYear}}{{scope.row.endNo}}
+                            </template> -->
+                        </el-table-column>
+                        <el-table-column
+                            prop="records"
+                            width="100"
+                            label="备案份数">
+                        </el-table-column>
+                        <el-table-column
+                            width="170"
+                            prop="createTime"
+                            label="申请备案时间">
+                            <!-- <template slot-scope="scope">
+                                {{scope.row.createTime | momentTime}}
+                            </template> -->
+                        </el-table-column>
+                        <el-table-column
+                            prop="detail"
+                            label="操作"
+                            width="100"
+                            >
+                            <template slot-scope="scope">
+                                <!--  :disabled="!$checkAuth('bas:enterprise:certificate:view')" -->
+                                <el-button type="text" size="small" @click="editModel(scope.row)" :disabled="!$checkAuth('bas:enterprise:certificate:editModel')">预览</el-button>
+                                <!-- <el-button type="text" size="small" @click="add">合格证前缀</el-button> -->
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+                <div class="page_box">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="pageNum"
+                        :page-sizes="[10, 20, 30, 40]"
+                        :page-size="pageSize"
+                        background
+                        layout="prev, pager, next, sizes,  jumper, total"
+                        :total="total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+        <Modal
+            :title="'修改合格证前缀'"
+            :width="500"
+            :alert="showAdd"
+            @alertCancel="closeAlert">
+            <div class="alert-box">
+                <div class="line">
+                    <label for=""><i class="important">*&nbsp;</i>企业名称：</label>
+                    <el-autocomplete
+                        class="inline-input info-ipt"
+                        v-model="companyName"
+                        :fetch-suggestions="querySearch"
+                        placeholder="请输入企业名称"
+                        @select="handleSelect">
+                        <template slot-scope="{ item }">
+                            <div class="name" v-html="item.entName.replace(companyName, `<span style=color:#ff0000>${companyName}</span>`)"></div>
+                        </template>
+                    </el-autocomplete>
+                </div>
+                <div class="line">
+                    <label for=""><i class="important"></i>前缀修改前：</label>
+                    <el-input disabled class="info-ipt" type="text" v-model="startPrefix"></el-input>
+                </div>
+                <div class="line">
+                    <label for=""><i class="important">*&nbsp;</i>前缀修改后：</label>
+                    <el-input  class="info-ipt" type="text" maxlength='4' v-model="endPrefix" placeholder="请输入4位前缀"></el-input>
+                </div>
+                <div class="btn-box">
+                    <el-button type="primary" @click="sureAlert('sure')">确定</el-button>
+                    <el-button @click="sureAlert('cancel')">取消</el-button>
+                </div>
+            </div>
+        </Modal>
+        <Modal
+            :title="'预览合格证'"
+            :width="932"
+            :alert="visiblePrint"
+            @alertCancel="closePrintAlert">
+            <div class="alert-print-box">
+                <div class="certificatePrint" id="certificatePrint">
+                    <div class="left">
+                        <div class="title">
+                            <div class="main-title">{{visiblePrintBoj.certPrefix}}NO.{{visiblePrintBoj.entCode}}{{visiblePrintBoj.particularYear}}{{visiblePrintBoj.startNo}}</div>
+                            <div class="sub-title">车属单位保管</div>
+                        </div>
+                        <div class="input-list">
+                            <div class="item">
+                                <div class="item-name">
+                                    托&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;修&nbsp;&nbsp;&nbsp;&nbsp;方</div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    车&nbsp;&nbsp;牌&nbsp;&nbsp;&nbsp;号&nbsp;&nbsp;码
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    车&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;型
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">发动机型号/编号</div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">底&nbsp;盘&nbsp;(车&nbsp;身)号</div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    维&nbsp;&nbsp;修&nbsp;&nbsp;类&nbsp;&nbsp;&nbsp;别
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    维修合同&nbsp;&nbsp;编&nbsp;号
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    出厂里程&nbsp;表示值
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                        </div>
+                        <div class="input-tips">&nbsp;&nbsp;&nbsp;该车按维修合同维修，经检验合格，准予出厂。</div>
+                        <div class="sign">
+                            <div class="item">质量检验员：&nbsp;&nbsp;&nbsp;&nbsp;(盖章)</div>
+                            <div class="item">承修单位：&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(盖章)</div>
+                        </div>
+                        <div class="factory">
+                            <div class="item">进厂日期：<span></span></div>
+                            <div class="item">出厂日期：<span></span></div>
+                            <div class="item">托修方接车人：（签字）</div>
+                            <div class="item">接车日期：</div>
+                        </div>
+                        <div class="foot">（对应正面合格证面）</div>
+                    </div>
+                    <div class="mid">
+                        <div class="title">
+                            <div class="main-title">{{visiblePrintBoj.certPrefix}}NO.{{visiblePrintBoj.entCode}}{{visiblePrintBoj.particularYear}}{{visiblePrintBoj.startNo}}</div>
+                            <div class="sub-title">质量保证卡</div>
+                        </div>
+                        <div class="text">
+                            该车按维修合同进行维修，本厂对维修竣工的车辆实行质量保证，质量保证期为车辆行驶<div class="text-line"></div>万公里或者<div class="text-line"></div>日。在托修单位严格执行走合同规定、合理使用、 正常维护的情况下，出现的维修质量问题，凭此卡随竣工出厂合格证，由本厂负责包修，免返修工料费和工时费，在原维修类别期限内修竣交托修方。
+                        </div>
+                        <div class="mid-name">返修情况记录：</div>
+                        <table class="record-table" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td width="15%">次数</td>
+                                <td>返修项目</td>
+                                <td>返修日期</td>
+                                <td>修竣日期</td>
+                                <td>送修人</td>
+                                <td>质检人</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </table>
+                        <div class="mid-name number">维修发票号：</div>
+                        <div class="foot">（对应正面白底）</div>
+                    </div>
+                    <div class="right">
+                        <div class="title">
+                            <div class="main-title">{{visiblePrintBoj.certPrefix}}NO.{{visiblePrintBoj.entCode}}{{visiblePrintBoj.particularYear}}{{visiblePrintBoj.startNo}}</div>
+                            <div class="sub-title">存根</div>
+                        </div>
+                        <div class="input-list">
+                            <div class="item">
+                                <div class="item-name">
+                                    托&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;修&nbsp;&nbsp;&nbsp;&nbsp;方</div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    车&nbsp;&nbsp;牌&nbsp;&nbsp;&nbsp;号&nbsp;&nbsp;码
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    车&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;型
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">发动机型号/编号</div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">底&nbsp;盘&nbsp;(车&nbsp;身)号</div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    维&nbsp;&nbsp;修&nbsp;&nbsp;类&nbsp;&nbsp;&nbsp;别
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    维修合同&nbsp;&nbsp;编&nbsp;号
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                            <div class="item">
+                                <div class="item-name">
+                                    出厂里程&nbsp;表示值
+                                </div>
+                                <div class="item-value"></div>
+                            </div>
+                        </div>
+                        <div class="input-tips">&nbsp;&nbsp;&nbsp;该车按维修合同维修，经检验合格，准予出厂。</div>
+                        <div class="sign">
+                            <div class="item">质量检验员：&nbsp;&nbsp;&nbsp;&nbsp;(盖章)</div>
+                            <div class="item">承修单位：&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(盖章)</div>
+                        </div>
+                        <div class="factory">
+                            <div class="item">进厂日期：<span></span></div>
+                            <div class="item">出厂日期：<span></span></div>
+                            <div class="item">托修方接车人：（签字）</div>
+                            <div class="item">接车日期：</div>
+                        </div>
+                        <div class="foot">（对应正面合格证面）</div>
+                    </div>
+                </div>
+                <div class="btn-box">
+                    <el-button type="primary" @click="surePrintAlert('sure')">确定</el-button>
+                    <el-button @click="surePrintAlert('cancel')">取消</el-button>
+                </div>
+            </div>
+        </Modal>
+        <bread-foot :breadArr="breadArr" icons="icon-business-normal">
+        <!-- :disabled="!$checkAuth('bas:enterprise:certificate:updateCertificateRecordsPrefixToDetection')" -->
+            <el-button type="primary" @click="add" :disabled="!$checkAuth('bas:enterprise:certificate:updateCertificateRecordsPrefixToDetection')">合格证前缀</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script type="text/javascript">
+import BreadFoot from '@/components/BreadFoot.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import ToolBar from '@/components/ToolBar.vue'
+import Modal from '@/components/Modal.vue'
+import { setNum } from '@/utils/tools.js'
+import moment from 'moment'
+import CertificatePrint from '@/components/certificatePrint.vue'
+export default {
+    name: 'certificate',
+    // 组件属性、变量、用于接收父组件的传值
+    props: {},
+    // 变量
+    data () {
+        return {
+            breadArr: [
+                { title: '业务操作', path: '' }, { title: '合格证管理', path: '' }
+            ],
+            loading: false,
+            companyTypeList: ['维修企业', '检测企业', '运输企业'],
+            enterpriseTailGasTreatmentStationIs: '',
+            enterpriseCertificate: '', // 合格证编码
+            queryName: '', // 查询名称
+            queryType: '', // 企业类型
+            daterange: '', // 时间范围
+            startPrefix: '', // 合格证前缀
+            endPrefix: '', // 结束编号
+            companyInfo: '',
+            companyName: '', // 企业名称
+            showLi: false, // 搜索列表
+            showAdd: false, // 是否显示弹框
+            pageSize: 10,
+            pageNum: 1,
+            total: 10,
+            input: '',
+            options: [],
+            value: '',
+            dataList: [
+                {
+                    num: '01',
+                    entName: '车大夫汽车维修服务有限公司',
+                    startNo: 'ZQ000010',
+                    endNo: 'ZQ0000020',
+                    records: 10,
+                    createTime: '2020-05-01'
+                },
+                {
+                    num: '02',
+                    entName: '山西智菱行汽车销售服务有限公司',
+                    startNo: 'ZQ000031',
+                    endNo: 'ZQ0000051',
+                    records: 20,
+                    createTime: '2020-04-21'
+                },
+                {
+                    num: '03',
+                    entName: '山西彩虹上通汽贸有限公司',
+                    startNo: 'ZQ000080',
+                    endNo: 'ZQ0000100',
+                    records: 21,
+                    createTime: '2020-05-08'
+                },
+                {
+                    num: '04',
+                    entName: '太原陆鼎汽车维修有限公司',
+                    startNo: 'ZQ000080',
+                    endNo: 'ZQ0000100',
+                    records: 21,
+                    createTime: '2020-05-08'
+                },
+                {
+                    num: '05',
+                    entName: '山西彩虹上通汽贸有限公司',
+                    startNo: 'ZQ000080',
+                    endNo: 'ZQ0000100',
+                    records: 21,
+                    createTime: '2020-05-08'
+                }
+            ],
+            visiblePrint: false,
+            visiblePrintBoj: {}
+        }
+    },
+    filters: {
+        momentTime: function (val) {
+            return moment(val).format('YYYY-MM-DD HH:mm:ss')
+        }
+    },
+    created () {
+        // this.queryData()
+        // this.enterpriseTypeFind()
+    },
+    computed: {
+    },
+    // 使用其它组件
+    components: {
+        BreadFoot,
+        Sidebar,
+        ToolBar,
+        Modal,
+        moment,
+        CertificatePrint
+    },
+    // 方法
+    watch: {},
+    methods: {
+        // 查询企业类别
+        enterpriseTypeFind () {
+            this.$post('/bas/enterprise/register/type/find', {})
+                .then(res => {
+                    if (res.status === 200) {
+                        this.options = res.enterpriseTypeList
+                    }
+                }).catch(err => {
+                    console.log(err)
+                })
+        },
+        // 弹窗合格证类型改变
+        certificateTypeChange () {
+            this.companyName = ''
+            this.companyInfo = ''
+            this.enterpriseCertificate = ''
+        },
+        // 弹窗搜索企业
+        querySearch (queryString, cb) {
+            var obj = {
+                enterpriseName: this.companyName
+            }
+            this.$post('bas/enterprise/certificate/findEnterpriseFromDetection', obj).then(res => {
+                if (res.status === 200) {
+                    cb(res.data)
+                }
+            })
+        },
+        handleSelect (info) {
+            this.fillInfo(info)
+        },
+        // 预览合格证
+        editModel (obj) {
+            this.visiblePrintBoj = obj
+            this.visiblePrint = true
+        },
+        // 删除合格证
+        deleteModel (obj) {
+            this.$myAlert({
+                title: '提示',
+                msg: '确认要删除"' + obj.enterpriseName + '"吗?'
+            }).then(() => {
+                this.$post('bas/enterprise/certificate/delete', {
+                    'data': {
+                        'enterpriseCertificate': obj.enterpriseCertificate
+                    }
+                }).then(res => {
+                    console.log(res)
+                    if (res.status === 200) {
+                        this.queryData()
+                    }
+                }).catch(err => {
+                    console.log(err)
+                })
+            }).catch(() => {
+                console.log('取消')
+            })
+        },
+        // 根据名称查企业
+        searchCompany () {
+            this.$post('bas/enterprise/register/findenterprise', {
+                'data': {
+                    'enterpriseName': this.companyName,
+                    'enterpriseIsAudit': 1
+                }
+            }).then(res => {
+                if (res.status === 200) {
+                    this.companyList = res.data
+                    this.showLi = false
+                    this.$nextTick(() => {
+                        this.showLi = true
+                    })
+                } else {
+                    this.companyList = []
+                    this.showLi = false
+                }
+            }).catch(err => {
+                console.log(err)
+            })
+        },
+        // 填充企业信息
+        fillInfo (info) {
+            this.companyInfo = info
+            this.startPrefix = info.certPrefix
+            this.companyName = info.entName
+            this.showLi = false
+        },
+        // 新增合格证
+        add () {
+            this.showAdd = true
+        },
+        surePrintAlert (val) {
+            if (val === 'sure') {
+            } else {
+                this.closePrintAlert()
+            }
+        },
+        sureAlert (val) {
+            if (val === 'sure') {
+                if (!this.companyName) {
+                    this.$alert('请输入企业名称', '提示')
+                    return
+                }
+                if (!this.companyInfo) {
+                    this.$alert('请选择正确的企业', '提示')
+                    return
+                }
+                if (!this.endPrefix) {
+                    this.$alert('请输入修改后前缀', '提示')
+                    return
+                }
+                if (this.endPrefix.length !== 4) {
+                    this.$alert('请输入4位修改后前缀', '提示')
+                    return
+                }
+                console.log(this.companyInfo.entId, 'this.companyInfo.entId')
+                this.$post('/bas/enterprise/certificate/updateCertificateRecordsPrefixToDetection', {
+                    'enterpriseId': this.companyInfo.entId,
+                    'enterpriseBusinessCertificatePrefix': this.endPrefix
+                }).then(res => {
+                    if (res.status === 200) {
+                        this.$toast({
+                            msg: '修改成功'
+                        })
+                        this.closeAlert()
+                        this.queryData()
+                    } else {
+                        console.log(res.message)
+                    }
+                }).catch(err => {
+                    console.log(err)
+                })
+            } else {
+                this.closeAlert()
+            }
+        },
+        isChineseChar (str) {
+            let reg = /[\u4E00-\u9FA5\uF900-\uFA2D]/
+            return reg.test(str)
+        },
+        closeAlert () {
+            this.companyName = ''
+            this.companyInfo = ''
+            this.startPrefix = ''
+            this.endPrefix = ''
+            this.enterpriseCertificate = ''
+            this.showAdd = false
+            this.showLi = false
+        },
+        closePrintAlert () {
+            this.visiblePrint = false
+        },
+        // 查询
+        search () {
+            this.pageNum = 1
+            this.queryData()
+        },
+        // 获取数据
+        queryData () {
+            if (!this.$checkAuth('bas:enterprise:certificate:findCertificateRecordsFromDetection')) {
+                this.$alert('没有查询权限！', '提示')
+                return
+            }
+            var obj = {
+                pageNum: this.pageNum,
+                pageSize: this.pageSize,
+                enterpriseName: this.queryName,
+                region: '',
+                startDate: this.daterange ? this.daterange[0] : '',
+                endDate: this.daterange ? this.daterange[1] + 24 * 60 * 60 * 1000 - 1 : ''
+            }
+            if (this.enterpriseTailGasTreatmentStationIs) {
+                obj.enterpriseTailGasTreatmentStationIs = this.enterpriseTailGasTreatmentStationIs
+            }
+            this.loading = true
+            this.$post('/bas/enterprise/certificate/findCertificateRecordsFromDetection', obj).then(res => {
+                if (res.status === 200) {
+                    this.dataList = setNum(res.data.list, this.pageNum, this.pageSize)
+                    this.total = res.data.total
+                } else {
+                    console.log(res.message)
+                }
+                this.loading = false
+            }).catch(err => {
+                this.loading = false
+                console.log(err)
+            })
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.queryData()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.queryData()
+        },
+        // 重置
+        toReact () {
+            this.queryName = ''
+            this.enterpriseTailGasTreatmentStationIs = ''
+            this.daterange = ''
+        },
+        print () {
+            let iframe = document.getElementById('print-iframe')
+            if (iframe) {
+                document.body.removeChild(iframe)
+            }
+            let el = document.getElementById('certificatePrint')
+            iframe = document.createElement('iframe')
+            iframe.setAttribute('id', 'print-iframe')
+            iframe.setAttribute('style', 'position:absolute;width:0px;height:0px;left:-500px;top:-500px;')
+            document.body.appendChild(iframe)
+            iframe.contentDocument.body.innerHTML = `
+                <style>
+                    .certificatePrint {
+                        padding-bottom: 40px;
+                        font-family: FangSong, Microsoft YaHei, sans-serif;
+                        color: #333;
+                        font-size: 14px;
+                        overflow: auto;
+                    }
+                    .certificatePrint .title {
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }
+                    .certificatePrint .title .main-title {
+                        margin-bottom: 16px;
+                    }
+                    .certificatePrint .title .sub-title {
+                        text-align: center;
+                        display: inline-block;
+                        line-height: 24px;
+                        border-bottom: 1px solid #d8d8d8;
+                    }
+                    .certificatePrint .left,
+                    .certificatePrint .mid,
+                    .certificatePrint .right {
+                        float: left;
+                        border-right: 1px dashed #d8d8d8;
+                        box-sizing: border-box;
+                        position: relative;
+                    }
+                    .certificatePrint .left .foot,
+                    .certificatePrint .mid .foot,
+                    .certificatePrint .right .foot {
+                        position: absolute;
+                        bottom: -40px;
+                        left: 50%;
+                        margin-left: -60px;
+                        color: #999;
+                    }
+                    .certificatePrint .left {
+                        width: 31%;
+                    }
+                    .certificatePrint .left,
+                    .certificatePrint .right {
+                        padding-right: 24px;
+                    }
+                    .certificatePrint .left .input-list,
+                    .certificatePrint .right .input-list {
+                        margin-bottom: 20px;
+                    }
+                    .certificatePrint .left .input-list .item,
+                    .certificatePrint .right .input-list .item {
+                        margin-bottom: 10px;
+                    }
+                    .certificatePrint .input-list .item-name,
+                    .certificatePrint .input-list .item-value {
+                        vertical-align: middle;
+                    }
+                    .certificatePrint .left .input-list .item .item-name,
+                    .certificatePrint .right .input-list .item .item-name {
+                        display: inline-block;
+                        width: 105px;
+                        margin-right: 8px;
+                        height: 24px;
+                    }
+                    .certificatePrint .left .input-list .item .item-value,
+                    .certificatePrint .right .input-list .item .item-value {
+                        display: inline-block;
+                        width: 180px;
+                        line-height: 20px;
+                        border-bottom: 1px solid #999;
+                    }
+                    .certificatePrint .left .input-tips,
+                    .certificatePrint .right .input-tips {
+                        margin-bottom: 16px;
+                        line-height: 30px;
+                    }
+                    .certificatePrint .left .sign,
+                    .certificatePrint .right .sign {
+                        text-align: right;
+                        margin-bottom: 26px;
+                    }
+                    .certificatePrint .left .sign .item,
+                    .certificatePrint .right .sign .item {
+                        margin-bottom: 12px;
+                    }
+                    .certificatePrint .left .factory .item,
+                    .certificatePrint .right .factory .item {
+                        margin-bottom: 12px;
+                    }
+                    .certificatePrint .mid {
+                        padding-left: 30px;
+                        padding-right: 13px;
+                        width: 33%;
+                    }
+                    .certificatePrint .mid .text {
+                        text-indent: 28px;
+                        margin-bottom: 40px;
+                        font-size: 16px;
+                        line-height: 30px;
+                    }
+                    .certificatePrint .mid .text .text-line {
+                        display: inline-block;
+                        min-width: 80px;
+                        border-bottom: 1px solid #999;
+                    }
+                    .certificatePrint .mid .mid-name {
+                        margin-bottom: 20px;
+                    }
+                    .certificatePrint .mid .mid-name.number {
+                        margin-bottom: 42px;
+                    }
+                    .certificatePrint .mid .record-table {
+                        width: 100%;
+                        border: 1px solid #ccc;
+                        border-collapse: collapse;
+                        margin-bottom: 34px;
+                    }
+                    .certificatePrint .mid .record-table td {
+                        height: 32px;
+                        border: 1px solid #ccc;
+                        text-align: center;
+                        padding: 0 3px;
+                    }
+                    .certificatePrint .right {
+                        width: 35%;
+                        padding-left: 34px;
+                        padding-right: 24px;
+                    }
+                </style>
+                <div class="certificatePrint">${el.innerHTML}</div>
+            `
+            iframe.contentWindow.print()
+        }
+    },
+    // 生命周期函数
+    beforeCreate () {},
+    mounted () {}
+}
+</script>
+
+<style lang="less" scoped>
+.certificate {
+    .important {
+        color: red;
+        font-style: normal;
+    }
+    .search_btn {
+        width: 40px;
+    }
+    .search-box {
+        position:absolute;
+        left: 165px;
+        z-index: 2;
+        background: #ffffff;
+        border: 1px solid #dddddd;
+        width: 200px;
+        li {
+            line-height: 30px;
+            cursor: pointer;
+        }
+    }
+    .alert-box {
+        padding: 10px;
+        .line {
+            position: relative;
+            margin-top: 20px;
+            label {
+                width: 100px;
+                display: inline-block;
+                color: #666;
+                font-size: 14px;
+                text-align: right;
+            }
+            .info-ipt {
+                width: 300px;
+                display: inline-block;
+                text-align: left;
+                label {
+                    text-align: left;
+                    width: auto;
+                }
+            }
+            .btn-1 {
+                position: absolute;
+                position:absolute;
+                border:none;
+                background:#359dff;
+                line-height: 34px;
+                color:#ffffff;
+                height:34px;
+                width: 50px;
+                cursor:pointer;
+                left: 370px;
+                border-radius: 4px;
+            }
+        }
+        .btn-box {
+            text-align: center;
+            margin: 30px 0;
+            button {
+                width: 100px;
+                height: 34px;
+                border-radius: 4px;
+            }
+            .btn1 {
+                background: #359dff;
+                color: #ffffff;
+                border: none;
+                margin-right: 20px;
+            }
+            .btn2 {
+                border: 1px solid #dbdbdb;
+                background: #ffffff;
+            }
+        }
+    }
+    .content {
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        top: 0;
+        padding-bottom: 80px;
+        .wrap {
+            padding: 0 30px;
+            .table_box {
+                border: 1px solid #dddddd;
+                border-bottom: none;
+            }
+            .page_box {
+                border-top: none;
+            }
+        }
+    }
+}
+.alert-print-box {
+    padding: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    text-align: left;
+    .btn-box {
+        text-align: center;
+        margin: 30px 0;
+        button {
+            width: 100px;
+            height: 34px;
+            border-radius: 4px;
+        }
+        .btn1 {
+            background: #359dff;
+            color: #ffffff;
+            border: none;
+            margin-right: 20px;
+        }
+        .btn2 {
+            border: 1px solid #dbdbdb;
+            background: #ffffff;
+        }
+    }
+}
+.certificatePrint {
+    padding-bottom: 24px;
+    font-family: FangSong, Microsoft YaHei, sans-serif;
+    color: #333;
+    font-size: 14px;
+    overflow: auto;
+    .title{
+        text-align: center;
+        margin-bottom: 16px;
+        .main-title {
+            margin-bottom: 8px;
+        }
+        .sub-title {
+            text-align: center;
+            display: inline-block;
+            line-height: 24px;
+            border-bottom: 1px solid #D8D8D8;
+        }
+    }
+    .left , .mid , .right {
+        float: left;
+        border-right: 1px dashed #D8D8D8;
+        box-sizing: border-box;
+        position: relative;
+        .foot {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            margin-left: -60px;
+            color: #999;
+        }
+    }
+    .left {
+        width: 31%;
+    }
+    .left, .right {
+        padding-right: 24px;
+        .input-list {
+            margin-bottom: 10px;
+            .item {
+                .item-name {
+                    display: inline-block;
+                    width: 105px;
+                    margin-right: 8px;
+                    height: 24px;
+                }
+                .item-value {
+                    display: inline-block;
+                    width: 136px;
+                    line-height: 20px;
+                    border-bottom: 1px solid #999;
+                }
+                .item-name, .item-value {
+                    vertical-align: middle;
+                }
+            }
+        }
+        .input-tips {
+            margin-bottom: 8px;
+        }
+        .sign {
+            text-align: right;
+            margin-bottom: 13px;
+            .item {
+                margin-bottom: 6px;
+            }
+        }
+        .factory {
+            .item {
+                margin-bottom: 6px;
+            }
+        }
+    }
+    .mid {
+        padding-left: 30px;
+        padding-right: 13px;
+        width: 33%;
+        .text {
+            text-indent: 28px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            .text-line {
+                display: inline-block;
+                min-width: 80px;
+                border-bottom: 1px solid #999;
+            }
+        }
+        .mid-name {
+            margin-bottom: 14px;
+        }
+        .record-table {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            margin-bottom: 13px;
+            td {
+                height: 32px;
+                border: 1px solid #ccc;
+                text-align: center;
+                padding: 0 3px;
+            }
+        }
+    }
+    .right {
+        width: 35%;
+        padding-left: 34px;
+        padding-right: 24px;
+    }
+}
+</style>
+<style lang="less">
+.certificate {
+    .alert-box {
+        .el-input__inner {
+            height:34px;
+            line-height: 34px;
+        }
+        .el-button {
+            height:34px;
+            line-height: 34px;
+        }
+    }
+}
+</style>

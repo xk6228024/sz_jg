@@ -1,0 +1,67 @@
+<template>
+    <div id="transportVehicleBusinessChart">
+        <div class="content">
+            <search v-model="searchValue" :options="searchOption" @search="queryData(1)"></search>
+            <div class='wrap'>
+                <month-pie-chart :title="'运输车辆维护业务图表统计'"></month-pie-chart>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-setting-normal">
+            <el-button>导出</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import Search from '@/components/search'
+import BreadFoot from '@/components/BreadFoot.vue'
+import toolBar from '@/components/ToolBar.vue'
+import MonthPieChart from '@/components/echart/MonthPieChart.vue'
+export default {
+    name: 'transportVehicleBusinessChart',
+    data () {
+        return {
+            searchValue: {},
+            searchOption: [
+                {
+                    label: '所属区域',
+                    type: 'select',
+                    key: 'region',
+                    list: [
+                        {
+                            value: 2,
+                            label: '宝安区'
+                        },
+                        {
+                            value: 3,
+                            label: '南山区'
+                        }
+                    ]
+                },
+                {
+                    label: '企业名称',
+                    type: 'input',
+                    key: 'enterpriseName'
+                },
+                {
+                    label: '上传日期',
+                    type: 'date',
+                    key: 'daterange'
+                }
+            ],
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '运输车辆维护业务统计', path: '' }
+            ]
+        }
+    },
+    components: {
+        BreadFoot,
+        Search,
+        MonthPieChart,
+        toolBar
+    },
+    methods: {
+        queryData () {}
+    }
+}
+</script>

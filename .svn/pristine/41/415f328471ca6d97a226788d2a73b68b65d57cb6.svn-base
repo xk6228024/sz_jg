@@ -1,0 +1,310 @@
+<!-- 固废物转移联单 -->
+<template>
+    <div class="wasteTransfer content-page">
+        <search v-model="searchValue" :options='searchOptions' @search="searchData(1)">
+        </search>
+        <div class="table">
+            <el-table
+                style="width: 100%;min-height:500px;"
+                :header-cell-style="{'background': '#FAFAFA', 'text-align':'left'}"
+                :data="tableData">
+                <el-table-column
+                prop="i"
+                align="center"
+                label="序号"
+                width="50">
+                </el-table-column>
+                <el-table-column
+                prop="code"
+                align="center"
+                label="单据编号">
+                </el-table-column>
+                <el-table-column
+                prop="city"
+                align="center"
+                label="城市">
+                </el-table-column>
+                <el-table-column
+                prop="region"
+                align="center"
+                label="地区">
+                </el-table-column>
+                <el-table-column
+                prop="ent"
+                align="center"
+                label="维修企业">
+                </el-table-column>
+                <el-table-column
+                prop="businessType"
+                align="center"
+                label="经营类别">
+                </el-table-column>
+                <el-table-column
+                prop="wasteType"
+                align="center"
+                label="废物类别">
+                </el-table-column>
+                <el-table-column
+                prop="wasteCode"
+                align="center"
+                label="废物代码">
+                </el-table-column>
+                <el-table-column
+                prop="wasteName"
+                align="center"
+                label="废物名称">
+                </el-table-column>
+                <el-table-column
+                prop="count"
+                align="center"
+                label="数量">
+                </el-table-column>
+                <el-table-column
+                prop="xt"
+                align="center"
+                label="废物形态">
+                </el-table-column>
+                <el-table-column
+                prop="bz"
+                align="center"
+                label="包装方式">
+                </el-table-column>
+                <el-table-column
+                prop="date1"
+                align="center"
+                label="单据时间">
+                </el-table-column>
+                <el-table-column
+                prop="date2"
+                align="center"
+                label="转移时间">
+                </el-table-column>
+                <el-table-column
+                prop="status"
+                align="center"
+                label="单据状态">
+                    <template slot-scope="scope">
+                        <span v-if="scope.row.status === '1'">未转移</span>
+                        <span v-if="scope.row.status === '2'">待转移</span>
+                        <span v-if="scope.row.status === '3'">已转移</span>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                label="操作">
+                    <template slot-scope="scope">
+                        <el-button type="text" @click="editDetail(scope.row.status)">查看</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination
+                style="margin-top: 16px;"
+                @size-change="handleSizeChange"
+                @current-change="handlePageChange"
+                :current-page="pageNum"
+                :page-sizes="[10, 15, 20]"
+                :page-size="pageSize"
+                background
+                layout="prev, pager, next, sizes,  jumper, total"
+                :total="50">
+            </el-pagination>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-business-normal">
+            <el-button>导出</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+import Search from '@/components/search/index'
+import { plateColor } from '@/utils/type.js'
+
+export default {
+    name: 'vehicleContract',
+    data () {
+        return {
+            breadArr: [
+                { title: '固废物管理', path: '' }, { title: '固废物联单转移', path: '' }
+            ],
+            searchOptions: [
+                {
+                    label: '维修企业',
+                    type: 'input',
+                    key: 'enterpriseName'
+                },
+                {
+                    label: '所在区域',
+                    type: 'select',
+                    list: [
+                        {
+                            label: '深圳',
+                            value: 1
+                        },
+                        {
+                            label: '南宁',
+                            value: 2
+                        }
+                    ],
+                    key: 'region'
+                },
+                {
+                    label: '经营类别',
+                    type: 'select',
+                    list: [
+                        {
+                            label: '一类',
+                            value: 1
+                        },
+                        {
+                            label: '二类',
+                            value: 2
+                        },
+                        {
+                            label: '三类',
+                            value: 2
+                        }
+                    ],
+                    key: 'business'
+                },
+                {
+                    label: '单据编号',
+                    type: 'input',
+                    key: 'vehicleFixCertificate'
+                },
+                {
+                    label: '单据状态',
+                    type: 'select',
+                    list: [
+                        {
+                            label: '未转移',
+                            value: 1
+                        },
+                        {
+                            label: '待转移',
+                            value: 2
+                        },
+                        {
+                            label: '已转移',
+                            value: 2
+                        }
+                    ],
+                    key: 'status'
+                },
+                {
+                    label: '单据日期',
+                    type: 'date',
+                    key: 'date'
+                },
+                {
+                    label: '转移日期',
+                    type: 'date',
+                    key: 'date2'
+                }
+            ],
+            searchValue: {},
+            plateColor,
+            searchContractType: '',
+            searchPlateColor: '',
+            searchDate: '',
+            visible: false,
+            pageNum: 1,
+            pageSize: 10,
+            tableData: [
+                {
+                    i: '01',
+                    code: 'GF1WE6520',
+                    city: '深圳市',
+                    region: '宝安区',
+                    ent: '益百汽车维修厂',
+                    businessType: '一类',
+                    wasteType: 'HW49',
+                    wasteCode: '900-041-01',
+                    wasteName: '废空滤器',
+                    count: '272.92',
+                    xt: '固态',
+                    bz: '桶装',
+                    status: '1',
+                    date1: '2020-04-10 09:30:45',
+                    date2: '2020-04-15 11:35:02'
+                },
+                {
+                    i: '02',
+                    code: 'GF1WE6523',
+                    city: '深圳市',
+                    region: '南山区',
+                    ent: '群车汇汽车服务公司',
+                    businessType: '二类',
+                    wasteType: 'HW08',
+                    wasteCode: '900-041-02',
+                    wasteName: '废机油',
+                    count: '120.9',
+                    xt: '液态',
+                    bz: '袋装',
+                    status: '2',
+                    date1: '2020-04-8 10:30:42',
+                    date2: '2020-04-11 12:39:02'
+                },
+                {
+                    i: '03',
+                    code: 'GF1WE6524',
+                    city: '深圳市',
+                    region: '福田区',
+                    ent: '万顺源汽车维修厂',
+                    businessType: '二级',
+                    wasteType: 'HW51',
+                    wasteCode: '900-041-06',
+                    wasteName: '废铅酸',
+                    count: '88.42',
+                    xt: '液态',
+                    bz: '桶装',
+                    status: '3',
+                    date1: '2020-04-04 16:11:05',
+                    date2: '2020-04-18 13:39:44'
+                }
+            ],
+            num: 1,
+            deleteVisible: false
+        }
+    },
+    components: {
+        BreadFoot,
+        Search
+    },
+    methods: {
+        searchData () {},
+        // 选择车牌颜色
+        plateColorChange (e) {
+            console.log(e)
+        },
+        // 多选事件
+        handleSelectionChange () {},
+        // 修改每页数量
+        handleSizeChange (val) {
+            this.pageNum = 1
+            this.pageSize = val
+        },
+        // 翻页
+        handlePageChange (val) {
+            console.log(val)
+        },
+        handleDeleteOk () {
+            this.deleteVisible = false
+        },
+        // 进入编辑页面
+        editDetail (status) {
+            this.$router.push('/viewWasteTransfer?type=' + status)
+        },
+        // 删除合同
+        deleteContract () {
+            this.$confirm({
+                class: 'confirm-danger',
+                centered: true,
+                content: '确定要删除吗？',
+                onOk: () => {
+                    console.log('ok')
+                }
+            })
+        }
+    }
+}
+</script>

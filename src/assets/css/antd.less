@@ -1,0 +1,154 @@
+/*** 组件样式 ***/
+
+// 分页组件
+.ant-pagination {
+    text-align: left;
+}
+
+// 表格组件
+.el-table__header {
+    th {
+        background: #FAFAFA;
+        color: #333;
+    }
+    background: #FAFAFA;
+}
+.el-table {
+    td {
+        padding: 8px 0;
+    }
+    &.padding {
+        td {
+            padding: 13px 0;
+        }
+    }
+    th>.cell {
+        color: #666;
+    }
+    th {
+        padding: 13px 0;
+    }
+    .el-table__empty-block {
+        min-height: 510px;
+        width: 100% !important;
+    }
+    &.empty-auto {
+        .el-table__empty-block {
+            min-height: 60px;
+        }
+    }
+}
+
+// 滚动条组件
+.el-scrollbar {
+    height: 100%;
+    width: 100%;
+    .el-scrollbar__wrap {
+        overflow-x: hidden;
+    }
+}
+
+// 输入框
+.ant-input {
+    color: #595959;
+    &.ant-input-lg {
+        font-size: 14px;
+    }
+    &.noborder {
+        border: none;
+        &:focus {
+            box-shadow: none;
+            border: none;
+        }
+    }
+}
+
+// 下拉框
+.ant-select-lg .ant-select-selection--single {
+    font-size: 14px;
+}
+
+// 按钮
+.ant-btn.white {
+    border: 1px solid #1890FF;
+    color: #1890FF;
+    background-color: #fff !important;
+}
+.ant-btn.success {
+    border: 1px solid @success;
+    color: @success;
+    background-color: #fff !important;
+    &:hover {
+        border: 1px solid #51c95d;
+        color: #51c95d;
+    }
+}
+.ant-row.inline {
+    .ant-col-1, .ant-col-2, .ant-col-3, .ant-col-4, .ant-col-5, .ant-col-6, .ant-col-7
+    , .ant-col-8, .ant-col-9, .ant-col-10, .ant-col-11, .ant-col-12, .ant-col-13, .ant-col-14
+    , .ant-col-15, .ant-col-16, .ant-col-17, .ant-col-18, .ant-col-19, .ant-col-20, .ant-col-21
+    , .ant-col-22, .ant-col-23, .ant-col-24 {
+        vertical-align: middle;
+        float: none;
+        display: inline-block;
+    }
+}
+#app {
+    .ant-btn-danger {
+        background-color: #fff;
+        border-color: @error;
+        color: @error;
+        &:hover {
+            color: #fff;
+            background-color: #ff8a8e;
+            border-color: #ff8a8e;
+        }
+    }
+}
+
+// 面包屑导航
+.ant-breadcrumb.breadcrumb {
+    height: 46px;
+    line-height: 46px;
+    padding: 0 8px;
+    .anticon {
+        margin-right: 12px;
+    }
+}
+
+// 对话框
+.ant-modal {
+    .ant-modal-footer {
+        border-top: none;
+        padding: 12px 16px 16px 16px;
+    }
+    .ant-modal-footer button + button {
+        margin-left: 16px;
+    }
+}
+
+// 表单
+body .ant-form-item {
+    margin-bottom: 16px;
+    .ant-form-item-label {
+        label {
+            color: #666;
+        }
+    }
+    &.label-wrap {
+        .ant-form-item-label {
+            label {
+                display: block;
+                white-space: pre-wrap;
+                line-height: 18px;
+                text-align: right;
+                padding-right: 8px;
+            }
+        }
+    }
+}
+
+// 上传组件
+body .ant-upload.ant-upload-select-picture-card {
+    background: #fff;
+}

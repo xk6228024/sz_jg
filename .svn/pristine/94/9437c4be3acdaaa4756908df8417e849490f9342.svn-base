@@ -1,0 +1,240 @@
+<template>
+    <div id="dataArchiving" class="page">
+        <!-- <search :option="searchOption" v-model="searchValue" @search="searchData">
+            <div class="radio fr">
+                <a-radio-group v-model="radio">
+                    <a-radio :value="1">运输企业列表</a-radio>
+                    <a-radio :value="2">个体业务列表</a-radio>
+                </a-radio-group>
+            </div>
+        </search> -->
+        <div class="table-common" v-show="radio === 1">
+            <el-table
+                :data="enterpriseTable"
+                border
+                style="width:100%;">
+                <el-table-column
+                    prop="num"
+                    label="序号"
+                    width="80">
+                </el-table-column>
+                <el-table-column
+                    prop="city"
+                    label="所属城市"
+                    width="100">
+                </el-table-column>
+                <el-table-column
+                    prop="district"
+                    label="所属区域"
+                    width="100">
+                </el-table-column>
+                <el-table-column
+                    prop="enterpriseName"
+                    label="企业名称">
+                </el-table-column>
+                <el-table-column
+                    prop="vehicleTotal"
+                    label="车辆总数">
+                </el-table-column>
+                <el-table-column
+                    prop="passCount"
+                    label="已归档车辆数">
+                </el-table-column>
+                <el-table-column
+                    prop="noPassCount"
+                    label="未归档车辆数">
+                </el-table-column>
+                <el-table-column
+                    prop="rate"
+                    label="未归档占比">
+                    <template slot-scope="scope">
+                        <span>{{ `${scope.row.rate}%` }}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                    label="操作"
+                    width="100">
+                    <template slot-scope="scope">
+                        <a-button type="link"
+                        :disabled="!$checkAuth('vehicleTechnicalRecord:detail')"
+                        @click="$router.push('/enterpriseArchivesDetail?id=' + scope.row.enterpriseId)" class="primary-color">详情</a-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <a-pagination class="mt20" showQuickJumper showSizeChanger v-model="enterPrisePage" :total="enterPriseTotal" :showTotal="enterPriseTotal => `共 ${enterPriseTotal} 条`" @change="enterPrisePageChange" @showSizeChange="enterPriseSizeChange" />
+        </div>
+        <div class="table-common" v-show="radio === 2">
+            <el-table
+                :data="personData"
+                border
+                style="width:100%;">
+                <el-table-column
+                    prop="num"
+                    label="序号"
+                    width="80">
+                </el-table-column>
+                <el-table-column
+                    prop="city"
+                    label="所属城市">
+                </el-table-column>
+                <el-table-column
+                    prop="area"
+                    label="所属区域">
+                </el-table-column>
+                <el-table-column
+                    prop="ownerName"
+                    label="车主单位">
+                </el-table-column>
+                <el-table-column
+                    prop="vehicleLicensePlate"
+                    label="车牌号码">
+                </el-table-column>
+                <el-table-column
+                    prop="vehicleLicensePlateColor"
+                    label="车牌颜色">
+                </el-table-column>
+                <el-table-column
+                    prop="vin"
+                    label="VIN码"
+                    width="180">
+                </el-table-column>
+                <el-table-column
+                    prop="number"
+                    label="道路运输证"
+                    width="120">
+                </el-table-column>
+                <el-table-column
+                    prop="itemize"
+                    label="车辆类型"
+                    width="120">
+                </el-table-column>
+                <el-table-column
+                    prop="vehicleTypeName"
+                    label="车辆大类">
+                </el-table-column>
+            </el-table>
+            <a-pagination class="mt20" showQuickJumper showSizeChanger v-model="personPage" :total="personTotal" :showTotal="personTotal => `共 ${personTotal} 条`" @change="personPageChange" @showSizeChange="personSizeChange" />
+        </div>
+        <bread-foot
+            :breadArr="[{title:'业务操作',path:''},{title:'车辆技术档案归集',path:''}]"
+            icons="icon-business-normal">
+            <a-button type="primary" ghost class="white margin" @click="downLoadTable"
+                :disabled="!$checkAuth('vehicleTechnicalRecord:personListExport,vehicleTechnicalRecord:listExport')">导出</a-button>
+            <!-- <a-button type="primary" class="margin" @click="fileList"
+                :disabled="!$checkAuth('business:notice:save')">归档</a-button> -->
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import { batteryType } from '@/assets/js/type'
+import BreadFoot from '@/components/BreadFoot.vue'
+import { getCookie } from '@/utils/utils.js'
+import Search from '@/components/SearchX.vue'
+export default {
+    name: 'dataArchiving',
+    data () {
+        return {
+            batteryType,
+            searchValue: {},
+            searchOption: [
+                {
+                    name: '区域：',
+                    type: 'cascader',
+                    key: 'region'
+                }
+            ],
+            radio: 1,
+
+            enterpriseTable: [],
+            enterPriseLimit: 10,
+            enterPrisePage: 1,
+            enterPriseTotal: 0,
+
+            personData: [],
+            personLimit: 10,
+            personPage: 1,
+            personTotal: 0,
+            total: 0
+        }
+    },
+    components: {
+        Search,
+        BreadFoot
+    },
+    watch: {
+        // radio: {
+        //     handler (val) {
+        //         if (val === 1 && !this.enterpriseTable.length) {
+        //             this.getEnterpriseData(1)
+        //         } else if (val === 2 && !this.personData.length) {
+        //             this.getPersonData(1)
+        //         }
+        //     },
+        //     immediate: true
+        // }
+    },
+    methods: {
+        enterPrisePageChange (val) {
+            this.enterPrisePage = val
+            this.getEnterpriseData()
+        },
+        enterPriseSizeChange (val) {
+            this.enterPriseLimit = val
+            this.getEnterpriseData(1)
+        },
+        personPageChange (val) {
+            this.personPage = val
+            this.getPersonData()
+        },
+        personSizeChange (current, size) {
+            this.personLimit = size
+            this.getPersonData(1)
+        },
+        // 搜索数据
+        searchData (flag) {
+            if (this.radio === 1) {
+                this.getEnterpriseData(1)
+            } else {
+                this.getPersonData(1)
+            }
+        },
+        getEnterpriseData (flag) {
+            let query = { ...this.searchValue }
+            if (flag) this.enterPrisePage = 1
+            this.$post('/vehicleTechnicalRecord/list', {
+                pageNum: this.enterPrisePage,
+                pageSize: this.enterPriseLimit,
+                regionCode: (query.region && query.region[query.region.length - 1]) || 0
+            }).then(res => {
+                if (res.status === 200) {
+                    this.enterpriseTable = this.$setNum(res.data, this.enterPrisePage, this.enterPriseLimit)
+                    this.enterPriseTotal = res.total
+                }
+            })
+        },
+        getPersonData (flag) {
+            let query = { ...this.searchValue }
+            if (flag) this.personPage = 1
+            this.$post('/vehicleTechnicalRecord/personList', {
+                pageNum: this.personPage,
+                pageSize: this.personLimit,
+                regionCode: (query.region && query.region[query.region.length - 1]) || 0
+            }).then(res => {
+                if (res.status === 200) {
+                    this.personData = this.$setNum(res.data, this.personPage, this.personLimit)
+                    this.personTotal = res.total
+                }
+            })
+        },
+        downLoadTable () {
+            let query = { ...this.searchValue }
+            if (this.radio === 1) {
+                window.open(`${window.downloadExcelURL}vehicleTechnicalRecord/listExport?regionCode=${(query.region && query.region[query.region.length - 1]) || 0}&token=${getCookie('token')}`)
+            } else {
+                window.open(`${window.downloadExcelURL}vehicleTechnicalRecord/personListExport?regionCode=${(query.region && query.region[query.region.length - 1]) || 0}&token=${getCookie('token')}`)
+            }
+        }
+    }
+}
+</script>

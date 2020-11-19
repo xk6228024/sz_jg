@@ -1,0 +1,328 @@
+<template lang="html">
+    <div class="companyData page">
+        <div class="content">
+            <div class="wrap">
+                <!-- <tool-bar :title="'企业数据对接统计'">
+                    <span slot="tips">共有企业{{recordCompany}}家,截止到目前,有{{buttCompany}}家企业完成系统对接</span>
+                </tool-bar> -->
+                <div class="topInfo">
+                    <span>
+                        健康档案数据上传统计
+                    </span>
+                    共有企业1128家,截止到目前,有866家企业完成系统对接
+                </div>
+                 <!-- <span slot="tips">共有企业{{recordCompany}}家,截止到目前,有{{buttCompany}}家企业完成系统对接</span> -->
+                <div class='wrap'>
+                    <div class="table_box">
+                        <el-table
+                            :data="tableData3"
+                            v-loading="loading"
+                            :header-cell-style="{background:'#EDF0F5','text-align':'center','border-color':'#dddddd',cellspacing:0}"
+                            :header-row-style="{border:'1px solid red'}"
+                            :cell-style="{'text-align':'center'}"
+                            :stripe="false"
+                            style="width: 100%;min-height:650px;">
+                        <el-table-column
+                            prop="index"
+                            label="序号"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="region_name"
+                            label="行政区域"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="recordCompany"
+                            label="已备案企业数量"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="recordCompanyJoins"
+                            label="已对接企业数量"
+                            >
+                        </el-table-column>
+                        <el-table-column
+                            prop="recordCompanyPer"
+                            label="已对接企业占比"
+                            >
+                            <!-- <template slot-scope="scope">
+                                {{scope.row.recordCompanyPer + '%'}}
+                            </template> -->
+                        </el-table-column>
+                        <el-table-column
+                            label="一类维修企业"
+                            >
+                            <el-table-column
+                                prop="company01"
+                                label="企业数量"
+                                >
+                            </el-table-column>
+                            <el-table-column
+                                prop="company01Joins"
+                                label="对接企业"
+                                >
+                            </el-table-column>
+                        </el-table-column>
+                        <el-table-column
+                            label="二类维修企业"
+                            >
+                            <el-table-column
+                                prop="company02"
+                                label="企业数量"
+                                >
+                            </el-table-column>
+                            <el-table-column
+                                prop="company02Joins"
+                                label="对接企业"
+                                >
+                            </el-table-column>
+                        </el-table-column>
+                        <el-table-column
+                            label="三类维修企业"
+                            >
+                            <el-table-column
+                                prop="company03"
+                                label="企业数量"
+                                >
+                            </el-table-column>
+                            <el-table-column
+                                prop="company03Joins"
+                                label="对接企业"
+                                >
+                            </el-table-column>
+                        </el-table-column>
+                        <el-table-column
+                            prop="name"
+                            label="操作"
+                            width="">
+                            <template slot-scope="scope">
+                                <el-button type="text" size="small" @click="editNotice(scope.row.region_id, scope.row.region_name)">详情</el-button>
+                                <!-- <el-button type="text" size="small" @click="deleteNotice(1)">删除</el-button> -->
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    </div>
+                    <!-- <div class="page_box">
+                        <el-pagination
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            :current-page="currentPage"
+                            :page-sizes="[100, 200, 300, 400]"
+                            :page-size="100"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            :total="400">
+                        </el-pagination>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-business-normal">
+             <!-- <el-button type="primary" @click="addNotice" :disabled="!$checkAuth('sys:notice:add')">推送稽查</el-button> -->
+        </bread-foot>
+    </div>
+</template>
+
+<script type="text/javascript">
+// import Header from '@/components/Header.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import BreadFoot from '@/components/BreadFoot.vue'
+export default {
+    name: 'companyData',
+    // 组件属性、变量、用于接收父组件的传值
+    props: {},
+    // 变量
+    data () {
+        return {
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '健康档案数据上传统计', path: '' }
+            ],
+            loading: false, // 是否显示loading
+            currentPage: 1, // 当前页数
+            input: '',
+            options: [],
+            value: '',
+            tableData3: [
+                {
+                    index: '01',
+                    region_name: '宝安区',
+                    recordCompany: 520,
+                    recordCompanyJoins: 210,
+                    recordCompanyPer: '42.2%',
+                    company01: '156',
+                    company01Joins: '23',
+                    company02: '113',
+                    company02Joins: '42',
+                    company03: '301',
+                    company03Joins: '165'
+                },
+                {
+                    index: '02',
+                    region_name: '龙华区',
+                    recordCompany: 1520,
+                    recordCompanyJoins: 510,
+                    recordCompanyPer: '30.1%',
+                    company01: '306',
+                    company01Joins: '123',
+                    company02: '586',
+                    company02Joins: '412',
+                    company03: '301',
+                    company03Joins: '198'
+                },
+                {
+                    index: '03',
+                    region_name: '南山区',
+                    recordCompany: 820,
+                    recordCompanyJoins: 610,
+                    recordCompanyPer: '70.2%',
+                    company01: '222',
+                    company01Joins: '93',
+                    company02: '113',
+                    company02Joins: '42',
+                    company03: '296',
+                    company03Joins: '141'
+                },
+                {
+                    index: '04',
+                    region_name: '福田区',
+                    recordCompany: 820,
+                    recordCompanyJoins: 610,
+                    recordCompanyPer: '70.2%',
+                    company01: '222',
+                    company01Joins: '93',
+                    company02: '113',
+                    company02Joins: '42',
+                    company03: '296',
+                    company03Joins: '221'
+                },
+                {
+                    index: '05',
+                    region_name: '龙岗区',
+                    recordCompany: 820,
+                    recordCompanyJoins: 610,
+                    recordCompanyPer: '70.2%',
+                    company01: '222',
+                    company01Joins: '93',
+                    company02: '113',
+                    company02Joins: '42',
+                    company03: '296',
+                    company03Joins: '334'
+                }
+            ],
+            recordCompany: 0, // 已备案企业数量
+            buttCompany: 0 // 已对接企业数量
+        }
+    },
+    created () {
+        // this.getData()
+    },
+    computed: {},
+    // 使用其它组件
+    components: {
+        BreadFoot,
+        Sidebar
+    },
+    // 方法
+    watch: {},
+    methods: {
+        getData () {
+            this.loading = true
+            this.$get('bas/vehicle/count/docking_report')
+                .then(res => {
+                    if (res.status === 200) {
+                        res.data.forEach((item, index) => {
+                            let ind = index + 1
+                            item.index = ind < 10 ? '0' + ind : ind
+                        })
+                        this.tableData3 = res.data
+                        this.tableData3.forEach(item => {
+                            this.recordCompany = this.recordCompany + (item.recordCompany - 0)
+                            this.buttCompany = this.buttCompany + (item.recordCompanyJoins - 0)
+                        })
+                    } else {
+                        this.$alert(res.message, '提示')
+                    }
+                    this.loading = false
+                }).catch(err => {
+                    console.log(err)
+                    this.loading = false
+                })
+        },
+        handleSizeChange () {},
+        handleCurrentChange () {},
+        // 详情
+        editNotice (id, name) {
+            this.$router.push('/companyDataDetail?id=' + id)
+        },
+        // 删除
+        deleteNotice (value) {
+            console.log(value)
+            console.log('删除')
+        }
+    },
+    // 生命周期函数
+    beforeCreate () {},
+    mounted () {}
+}
+</script>
+
+<style lang="less" scoped>
+.companyData {
+    // height: 100%;
+    .content {
+        position: relative;
+        width: 100%;
+        // height: 100%;
+        box-sizing: border-box;
+        top: 0;
+        .wrap {
+            padding: 0 20px;
+            .table_box {
+                // border: 1px solid #dddddd;
+                border-bottom: none;
+            }
+            .page_box {
+                background: #f7f8f9;
+                padding-top: 10px;
+                height: 53px;
+                // border: 1px solid #dddddd;
+                border-top: none;
+            }
+        }
+    }
+}
+.page {
+    .content {
+        // position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        top: 0;
+        padding-bottom: 80px;
+        .wrap {
+            .table_box {
+                // padding: 0 30px;
+                border: 1px solid #dddddd;
+                border-bottom: none;
+            }
+            .page_box {
+                padding-left: 30px;
+                padding-right: 30px;
+                border-top: none;
+            }
+        }
+    }
+    .topInfo {
+        height: 60px;
+        line-height: 60px;
+        color: #FD4B40;
+        font-size: 14px;
+        span {
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+    }
+}
+</style>

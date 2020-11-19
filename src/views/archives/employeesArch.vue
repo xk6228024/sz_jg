@@ -1,0 +1,204 @@
+<!-- 从业人员档案档案 -->
+<template>
+    <div class="content-page">
+        <search v-model='searchValue' :options='searchOption' @search='getData(1)' permission='bas:person:findPersionView'></search>
+        <div class="wrap">
+            <custom-table
+            :table-data="dataList"
+            :label-data="labelData"
+            :total="total"
+            :height='630'
+            :currentPage='pageNum'
+            :loading="tableloading"
+            @onPageChange="handleCurrentChange"
+            @onSizeChange="handleSizeChange"
+            >
+                <template slot="personStatus" slot-scope="scope">
+                    <span>{{scope.slotData.personStatus === '0' ? '正常' : '禁用'}}</span>
+                </template>
+                <template slot="operation" slot-scope="scope">
+                    <el-button type="text" size="small" :disabled="!$checkAuth('bas:person:findPersionViewDetail')"
+                    @click="$router.push(`/employeesArchDetail?personId=${scope.slotData.personId}`)">详情</el-button>
+                </template>
+            </custom-table>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-archives-normal">
+            <!-- <el-button class='back-btn' @click="$router.push('/employeesArchNew')">从业人员建档</el-button> -->
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import Modal from '@/components/Modal.vue'
+import BreadFoot from '@/components/BreadFoot.vue'
+import CustomTable from '@/components/table'
+import Search from '@/components/search'
+import { bussinessCategory } from '@/utils/type.js'
+import { setNum } from '@/utils/utils.js'
+export default {
+    name: 'companyArch',
+    components: {
+        BreadFoot,
+        Modal,
+        CustomTable,
+        Search
+    },
+    data () {
+        return {
+            breadArr: [
+                { title: '档案管理', path: '' }, { title: '从业人员档案', path: '' }
+            ],
+            searchOption: [
+                {
+                    label: '企业名称',
+                    type: 'input',
+                    key: 'enterpriseName'
+                },
+                {
+                    label: '从业人员姓名',
+                    type: 'input',
+                    key: 'personName'
+                }
+            ],
+            searchValue: {},
+            bussinessCategory,
+            labelData: [
+                {
+                    label: '序号',
+                    prop: 'num',
+                    width: 80
+                },
+                {
+                    label: '姓名',
+                    prop: 'personName',
+                    minWidth: '10%'
+                },
+                {
+                    label: '性别',
+                    prop: 'genderStr',
+                    minWidth: '10%'
+                },
+                {
+                    label: '岗位',
+                    prop: 'personWorkTypeStr',
+                    minWidth: '10%'
+                },
+                {
+                    label: '上岗证号',
+                    prop: 'personCertno',
+                    minWidth: '20%'
+                },
+                {
+                    label: '身份证号',
+                    prop: 'personIdcardNumber',
+                    minWidth: '20%'
+                },
+                {
+                    label: '所属企业',
+                    prop: 'enterpriseName',
+                    minWidth: '20%'
+                },
+                {
+                    label: '状态',
+                    slotName: 'personStatus',
+                    minWidth: '10%'
+                },
+                {
+                    label: '操作',
+                    slotName: 'operation',
+                    minWidth: '10%'
+                }
+            ],
+            dataList: [
+                {
+                    num: 1,
+                    personName: '李强',
+                    genderStr: '男',
+                    personWorkTypeStr: '机修',
+                    personCertno: '2304451224',
+                    personIdcardNumber: '440154198702035412',
+                    enterpriseName: '车大夫汽车维修服务有限公司',
+                    personStatus: '0'
+                },
+                {
+                    num: 2,
+                    personName: '王美丽',
+                    genderStr: '女',
+                    personWorkTypeStr: '引车员',
+                    personCertno: '2304451288',
+                    personIdcardNumber: '440154199411028897',
+                    enterpriseName: '太原市红菱进口汽车维修有限公司',
+                    personStatus: '0'
+                },
+                {
+                    num: 3,
+                    personName: '纳兰容若',
+                    genderStr: '男',
+                    personWorkTypeStr: '引车员',
+                    personCertno: '2304451111',
+                    personIdcardNumber: '440154199411028897',
+                    enterpriseName: '太原市盛世开元汽车销售有限公司',
+                    personStatus: '0'
+                },
+                {
+                    num: 4,
+                    personName: '孙少安',
+                    genderStr: '男',
+                    personWorkTypeStr: '引车员',
+                    personCertno: '2304451111',
+                    personIdcardNumber: '440154199411028897',
+                    enterpriseName: '太原华瑞富星汽车销售服务有限公司',
+                    personStatus: '0'
+                },
+                {
+                    num: 5,
+                    personName: '王世才',
+                    genderStr: '男',
+                    personWorkTypeStr: '引车员',
+                    personCertno: '2304451111',
+                    personIdcardNumber: '440154199411028897',
+                    enterpriseName: '山西友通汽车贸易有限公司',
+                    personStatus: '0'
+                }
+            ],
+            tableloading: false,
+            pageNum: 1,
+            pageSize: 10,
+            total: 100
+        }
+    },
+    created () {
+    },
+    methods: {
+        getData (clear) {
+            if (!this.$checkAuth('bas:person:findPersionView')) {
+                this.$alert('暂无查看权限！', '提示')
+                return
+            }
+            if (clear) {
+                this.pageNum = 1
+            }
+            this.$post('bas/person/findPersionView', {
+                pageNum: this.pageNum,
+                pageSize: this.pageSize,
+                // personId: '',
+                enterpriseName: this.searchValue.enterpriseName,
+                personName: this.searchValue.personName
+            }).then(res => {
+                if (res.status === 200 && res.data) {
+                    this.dataList = setNum(res.data.list, this.pageNum, this.pageSize)
+                    this.total = res.data.total
+                }
+            })
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.getData(1)
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.getData()
+        }
+    }
+}
+</script>

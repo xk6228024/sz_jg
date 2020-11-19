@@ -1,0 +1,371 @@
+<template>
+    <div class="synthesizeWork">
+        <div class="content">
+            <div class="table_top table_tap_pad">
+                <div class="table_top_l clearfix" :class="{'arrow-active': ArrowActive}">
+                    <div class="table_top_ls">
+                        <label>企业名称：</label>
+                        <el-input class="tool_ipt" v-model="pname" placeholder="请输入内容"></el-input>
+                    </div>
+                    <div class="table_top_ls">
+                        <label>所在区域：</label>
+                        <el-select v-model="region"  class="tool_ipt_small" placeholder="请选择" clearable>
+                            <el-option
+                            v-for="item in regionList"
+                            :key="item.regionId"
+                            :label="item.regionName"
+                            :value="item.regionId">
+                            </el-option>
+                        </el-select>
+                    </div>
+                    <div class="table_top_ls" v-if="ArrowActive">
+                        <label>车牌号码：</label>
+                        <el-input class="tool_ipt" v-model="input" placeholder="请输入内容"></el-input>
+                    </div>
+                    <div class="table_top_ls" v-if="ArrowActive">
+                        <label>上传日期：</label>
+                        <el-date-picker
+                            v-model="daterange"
+                            type="daterange"
+                            align="right"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            value-format="timestamp"
+                            >
+                        </el-date-picker>
+                    </div>
+                    <div class="table_top_lr fr">
+                        <el-button type="text" v-if="ArrowActive" @click="toArrowActive">收起 <i class="el-icon-arrow-up"></i></el-button>
+                        <el-button type="text" v-if="!ArrowActive" @click="toArrowActive">展开 <i class="el-icon-arrow-down"></i></el-button>
+                        <el-button class="query_btn slects_btn" @click="queryData(1)">查询</el-button>
+                        <el-button class="react_btn" @click="toReact">重置</el-button>
+                    </div>
+                </div>
+            </div>
+            <div class='wrap'>
+                <div class="table_box">
+                    <el-table
+                        :data="tableData3"
+                        v-loading="loading"
+                        height="570"
+                        :header-cell-style="{'text-align':'center'}"
+                        :cell-style="{'text-align':'center'}"
+                        :stripe="false"
+                        style="width: 100%">
+                    <el-table-column
+                        prop="num"
+                        label="序号"
+                        min-width="5%"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="dsName"
+                        label="企业名称"
+                        min-width="20%"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="dsId"
+                        label="所属区域"
+                        min-width="10%"
+                        >
+                        <template slot-scope="scope">
+                            {{scope.row.dsId|filterRegionS}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="vehicleNo"
+                        label="车牌号码"
+                        min-width="10%"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="plateColor"
+                        label="车牌颜色"
+                        min-width="10%"
+                        >
+                        <template slot-scope="scope">
+                            {{scope.row.plateColor|filterCommon(plateColor)}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="createTime"
+                        label="上传日期"
+                        min-width="10%"
+                        >
+                        <template slot-scope="scope">
+                            <span>{{scope.row.createTime | momentTime}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="detectType"
+                        label="检测类别"
+                        min-width="10%"
+                        >
+                        <template slot-scope="scope">
+                            <span>{{scope.row.detectType|typeFilter}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="detectSn"
+                        label="流水号"
+                        min-width="20%"
+                        >
+                    </el-table-column>
+                    <!-- <el-table-column
+                        prop="1"
+                        label="检测次数"
+                        >
+                        <template slot-scope="scope">
+                            <span :class="scope.row.enterpriseId">1</span>
+                        </template>
+                    </el-table-column> -->
+                    <!-- <el-table-column
+                        prop="client"
+                        label="业户名称"
+                        >
+                    </el-table-column> -->
+                    <el-table-column
+                        prop="name"
+                        min-width="10%"
+                        label="操作">
+                        <template slot-scope="scope">
+                            <el-button type="text" size="small"  @click="editNotice(scope.row.detectSn)">详情</el-button>
+                            <!-- <el-button type="text" size="small" @click="getReport1(scope.row.detectsn)">人工检验记录单</el-button>
+                            <el-button type="text" size="small" @click="getReport2(scope.row.detectsn)">性能检验记录单</el-button>
+                            <el-button type="text" size="small" @click="getReport3(scope.row.detectsn)">综合性能检验报告单</el-button> -->
+                        </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+                <div class="page_box">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="pageNum"
+                        :page-sizes="[10, 20, 30, 40]"
+                        :page-size="pageSize"
+                        background
+                        layout="prev, pager, next, sizes,  jumper, total"
+                        :total="total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+        <pdf-view
+            :title="'预览'"
+            :url="pdfUrl"
+            @alertCancel="pdfCancel"
+            :width="pdfWidth"
+            :height="pdfHeight"
+            :alert="pdfShow">
+        </pdf-view>
+        <bread-foot :breadArr="breadArr" icons="icon-analy-normal">
+        </bread-foot>
+    </div>
+</template>
+
+<script type="text/javascript">
+import BreadFoot from '@/components/BreadFoot.vue'
+import ToolBar from '@/components/ToolBar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import { setNum } from '@/utils/tools.js'
+import { plateColor } from '@/utils/type.js'
+import PdfView from '@/components/PdfView.vue'
+import moment from 'moment'
+export default {
+    name: 'synthesizeWork',
+    // 组件属性、变量、用于接收父组件的传值
+    props: {},
+    // 变量
+    data () {
+        return {
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '检测记录查询', path: '' }
+            ],
+            loading: false,
+            ArrowActive: true, // 展开
+            pname: '',
+            regionList: [],
+            region: '',
+            pdfShow: false,
+            pdfUrl: window.uploadURL + 'report/inspect/findInspect4', // pdf预览地址
+            plateColor,
+            total: 0,
+            pageNum: 1,
+            pageSize: 10,
+            daterange: [],
+            currentPage: 1, // 当前页数
+            input: '',
+            value: '',
+            tableData3: []
+        }
+    },
+    created () {
+        this.queryData()
+        this.getRegion()
+    },
+    computed: {
+        pdfWidth () {
+            return document.body.clientWidth > 800 ? document.body.clientWidth * 0.8 : 800
+        },
+        pdfHeight () {
+            return document.body.clientHeight > 600 ? document.body.clientHeight * 0.8 : 600
+        }
+    },
+    // 使用其它组件
+    components: {
+        BreadFoot,
+        Sidebar,
+        ToolBar,
+        PdfView,
+        moment
+    },
+    filters: {
+        typeFilter (val) {
+            if (val === 1) {
+                return '技术等级评定'
+            } else if (val === 4) {
+                return '二级维护竣工质量检验'
+            } else if (val === 5) {
+                return '汽车大修竣工质量检验'
+            } else if (val === 9) {
+                return '其他检测'
+            }
+        },
+        filterRegionS (val) {
+            let id = val
+            let name = '--'
+            if (id) {
+                id = id.slice(0, 6)
+                if (localStorage.regionList) {
+                    JSON.parse(localStorage.regionList).forEach(e => {
+                        if (e.regionId === id) {
+                            name = e.regionName
+                        }
+                    })
+                } else {
+                    name = val
+                }
+            }
+            return name
+        },
+        momentTime: function (val) {
+            return moment(val).format('YYYY-MM-DD HH:mm:ss')
+        }
+    },
+    // 方法
+    watch: {},
+    methods: {
+        getRegion () {
+            this.$post('bas/city/findRegionByDomainCity', {})
+                .then(res => {
+                    if (res.status === 200) {
+                        this.regionList = res.datas
+                    }
+                })
+        },
+        pdfCancel () {
+            this.pdfShow = false
+        },
+        // 人工检验记录单
+        getReport1 (id) {
+            this.pdfShow = true
+            this.pdfUrl = window.uploadURL + 'report/inspect/findInspect1' + '?detectSn=' + id
+        },
+        // 性能检验记录单
+        getReport2 (id) {
+            this.pdfShow = true
+            this.pdfUrl = window.uploadURL + 'report/inspect/findInspect2' + '?detectSn=' + id
+        },
+        // 综合性能检验报告单
+        getReport3 (id) {
+            this.pdfShow = true
+            this.pdfUrl = window.uploadURL + 'report/inspect/findInspect3' + '?detectSn=' + id
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.queryData()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.queryData()
+        },
+        // 查看详情
+        editNotice (id) {
+            if (!this.$checkAuth('jc:detect:detailj')) {
+                this.$alert('没有查询权限！', '提示')
+                return
+            }
+            this.$router.push('/synthesizeWorkDetail?id=' + id)
+        },
+        queryData (clear) {
+            if (clear) {
+                this.pageNum = 1
+            }
+            this.loading = true
+            this.$post('jc/detect/find', {
+                pageNum: this.pageNum,
+                pageSize: this.pageSize,
+                vehicleNo: this.input,
+                dsName: this.pname,
+                regionId: this.region,
+                startTime: this.daterange && this.daterange.length ? this.daterange[0] : '',
+                endTime: this.daterange && this.daterange.length ? this.daterange[1] + 24 * 60 * 60 * 1000 - 1 : ''
+            }).then(res => {
+                if (res.status === 200) {
+                    this.tableData3 = setNum(res.data.list, this.pageNum, this.pageSize)
+                    this.total = res.data.total
+                }
+                this.loading = false
+            }).catch(err => {
+                this.loading = false
+                console.log(err)
+                this.$alert('请求失败', '提示')
+            })
+        },
+        // 重置
+        toReact () {
+            this.pname = ''
+            this.region = ''
+            this.input = ''
+            this.daterange = ''
+        },
+        // 展开 收缩
+        toArrowActive () {
+            this.ArrowActive = !this.ArrowActive
+        }
+    },
+    // 生命周期函数
+    beforeCreate () {},
+    mounted () {}
+}
+</script>
+
+<style lang="less" scoped>
+.synthesizeWork {
+    background: #FFFFFF;
+    .content {
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        top: 0;
+        padding-bottom: 80px;
+        .table_tap_pad {
+            padding: 25px 30px;
+        }
+        .wrap {
+            padding: 0 30px 0 30px;
+            .table_box {
+                border: 1px solid #dddddd;
+                border-bottom: none;
+            }
+            .page_box {
+                border-top: none;
+            }
+        }
+    }
+}
+</style>

@@ -1,0 +1,383 @@
+<template>
+    <div class="page">
+        <div class="content">
+            <div class='wrap'>
+                <tool-bar>
+                     <div class="fl">
+                        <label>抽查区域：</label>
+                        <el-select class="tool_ipt" v-model="searchType" placeholder="请选择">
+                            <el-option label="宝安区" value="0"></el-option>
+                            <el-option label="南山区" value="1"></el-option>
+                            <el-option label="龙岗区" value="2"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="fl">
+                        <label>抽查数量：</label>
+                        <el-input class="tool_ipt" type="number" v-model="companyName" placeholder="请输入"></el-input>
+                    </div>
+                    <div class="fr">
+                        <el-button class="query_btn slects_btn" @click="queryData" :disabled="!companyName||!searchType">查询</el-button>
+                        <el-button class="react_btn" @click="toReact">重置</el-button>
+                    </div>
+                </tool-bar>
+                <div class="block" v-if="!dataList.length">
+                    <div class="box">
+                        <img src="../../assets/images/Clipped.svg" alt="">
+                        <p class="msg">页面暂无内容</p>
+                        <p class="tips">请选择抽查区域和抽查数量，搜索后得出内容…</p>
+                    </div>
+                </div>
+                <div class="table_box" v-if="dataList.length">
+                    <el-table
+                        :data="dataList"
+                        height="550"
+                        border
+                        :header-cell-style="{'text-align':'center'}"
+                        :cell-style="{'text-align':'center'}"
+                        :stripe="false"
+                        style="width: 100%">
+                    <el-table-column
+                        type="selection"
+                        width="55">
+                    </el-table-column>
+                    <el-table-column
+                        prop="num"
+                        label="序号"
+                        width="60"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="enterpriseName"
+                        label="企业名称"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="enterpriseCreditIdentifier"
+                        label="所在区域"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="enterpriseLinkName"
+                        label="车辆总数"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="enterpriseLinkMobile"
+                        label="已归档车辆数"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="enterpriseEvaluateApplyDate"
+                        label="未归档占比"
+                        >
+                    </el-table-column>
+                  </el-table>
+                </div>
+                <div class="page_box" v-if="dataList.length">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="pageNum"
+                        :page-sizes="[10, 20, 30, 40]"
+                        :page-size="pageSize"
+                        background
+                        layout="prev, pager, next, sizes,  jumper, total"
+                        :total="total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-business-normal">
+             <el-button type="primary" v-if="dataList.length" @click="addNotice" :disabled="!$checkAuth('sys:notice:add')">推送稽查</el-button>
+        </bread-foot>
+        <div class="loadingWrap" v-if="showAlert">
+            <div class="loading" v-loading="loading">
+                <i class="el-icon-loading"></i>
+                <p>系统随机抽查中，请稍后…</p>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="text/javascript">
+import BreadFoot from '@/components/BreadFoot.vue'
+import ToolBar from '@/components/ToolBar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import { filterTime } from '@/utils/filterTime.js'
+// import { setNum } from '@/utils/tools.js'
+// import { bussinessCategory } from '@/utils/type.js'
+// import { getCookie } from '@/utils/cookie.js'
+// import Modal from '@/components/Modal.vue'
+export default {
+    name: 'applyAudit',
+    // 组件属性、变量、用于接收父组件的传值
+    props: {},
+    // 变量
+    data () {
+        return {
+            showAlert: false,
+            loading: false,
+            searchType: '',
+            breadArr: [
+                { title: '业务操作', path: '' }, { title: '双随机抽查', path: '' }
+            ],
+            // bussinessCategory,
+            pageNum: 1,
+            pageSize: 10,
+            total: 10,
+            auditStatus: '', // 审核状态
+            companyName: '', // 企业名称
+            currentPage: 1, // 当前页数
+            input: [], // 时间
+            options: [],
+            value: '',
+            roleExtEnterpriseLinkpersonIsview: 0,
+            dataList: [
+                // {
+                //     num: '01',
+                //     enterpriseName: '深圳达梦维修厂',
+                //     enterpriseCreditIdentifier: 'ZQ777145666112',
+                //     enterpriseBusinessCategory: 1,
+                //     enterpriseEvaluateApplyDate: '2020-5-1 '
+                // },
+                // {
+                //     num: '02',
+                //     enterpriseName: '深圳戴安乐维修厂',
+                //     enterpriseCreditIdentifier: 'ZQ123213542131232',
+                //     enterpriseBusinessCategory: 1,
+                //     enterpriseEvaluateApplyDate: '2020-5-1 '
+                // },
+                // {
+                //     num: '03',
+                //     enterpriseName: '深圳法喜隆维修厂',
+                //     enterpriseCreditIdentifier: 'ZQ44412335452123789',
+                //     enterpriseBusinessCategory: 1,
+                //     enterpriseEvaluateApplyDate: '2020-5-1 '
+                // }
+            ]
+        }
+    },
+    created () {
+        // try {
+        //     var user = JSON.parse(getCookie('user'))
+        //     this.roleExtEnterpriseLinkpersonIsview = user.roleExtEnterpriseLinkpersonIsview
+        // } catch (e) {
+        //     this.roleExtEnterpriseLinkpersonIsview = 0
+        // }
+        // this.queryData()
+    },
+    computed: {},
+    // 使用其它组件
+    components: {
+        BreadFoot,
+        ToolBar,
+        Sidebar
+    },
+    filters: {
+        formatTimeS (val) {
+            let str = new Date(val) - 0
+            return filterTime('yyyy-mm-dd', str - 0)
+        }
+    },
+    // 方法
+    watch: {},
+    methods: {
+        addNotice () {
+            this.$message({
+                message: '推送成功.',
+                type: 'success',
+                onClose: () => {
+                    this.dataList = []
+                }
+            })
+        },
+        queryData () {
+            this.showAlert = true
+            setTimeout(() => {
+                this.showAlert = false
+                this.dataList = [
+                    {
+                        num: '01',
+                        enterpriseName: '深圳市瑞申汽车运输有限公司',
+                        enterpriseCreditIdentifier: '宝安区',
+                        enterpriseLinkName: 400,
+                        enterpriseLinkMobile: 200,
+                        enterpriseEvaluateApplyDate: '50%'
+                    },
+                    {
+                        num: '02',
+                        enterpriseName: '深圳市一连通汽车运输有限公司',
+                        enterpriseCreditIdentifier: '宝安区',
+                        enterpriseLinkName: 1100,
+                        enterpriseLinkMobile: 200,
+                        enterpriseEvaluateApplyDate: '18.9%'
+                    },
+                    {
+                        num: '03',
+                        enterpriseName: '深圳市芮发德旺汽车运输有限公司',
+                        enterpriseCreditIdentifier: '宝安区',
+                        enterpriseLinkName: 600,
+                        enterpriseLinkMobile: 200,
+                        enterpriseEvaluateApplyDate: '33.3%'
+                    },
+                    {
+                        num: '04',
+                        enterpriseName: '深圳市南山区汉枫汽车服务有限公司',
+                        enterpriseCreditIdentifier: '宝安区',
+                        enterpriseLinkName: 600,
+                        enterpriseLinkMobile: 200,
+                        enterpriseEvaluateApplyDate: '44.3%'
+                    },
+                    {
+                        num: '05',
+                        enterpriseName: '深圳市新金龙汽车修理厂',
+                        enterpriseCreditIdentifier: '宝安区',
+                        enterpriseLinkName: 520,
+                        enterpriseLinkMobile: 100,
+                        enterpriseEvaluateApplyDate: '26.1%'
+                    }
+                ]
+            }, 2000)
+            // this.loading = true
+            // setTimeout(() => {
+            //     const loading = this.$loading({
+            //         target: '.loading',
+            //         lock: true,
+            //         text: '系统随机抽查中，请稍后…',
+            //         spinner: 'el-icon-loading'
+            //     })
+            // }, 333)
+            // console.log(this.$refs)
+            // const loading = this.$loading({
+            //     target: '.loading',
+            //     lock: true,
+            //     text: 'Loading',
+            //     spinner: 'el-icon-loading',
+            //     background: 'rgba(0, 0, 0, 0.7)'
+            // })
+            // this.$post('bas/enterprise/evaluateApply/findEnterprise', {
+            //     pageNum: this.pageNum,
+            //     pageSize: this.pageSize,
+            //     data: {
+            //         enterpriseName: this.companyName,
+            //         enterpriseEvaluateApplyAuditIs: 0
+            //     }
+            // }).then(res => {
+            //     if (res.status === 200) {
+            //         this.dataList = setNum(res.datas.list, this.pageNum, this.pageSize)
+            //         this.total = res.datas.total
+            //     } else {
+            //         console.log(res.message)
+            //     }
+            // }).catch(err => {
+            //     console.log(err)
+            // })
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.queryData()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.queryData()
+        },
+        // 详情
+        goDetail (id) {
+            this.$router.push('/creditEva/applyAuditDetail?id=' + id)
+        },
+        // 重置
+        toReact () {
+            this.companyName = ''
+            this.dataList = []
+        }
+    },
+    // 生命周期函数
+    beforeCreate () {},
+    mounted () {}
+}
+</script>
+
+<style lang="less" scoped>
+.page {
+    .content {
+        // position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        top: 0;
+        padding-bottom: 80px;
+        .wrap {
+            .table_box {
+                padding: 0 30px;
+                border: 1px solid #dddddd;
+                border-bottom: none;
+            }
+            .page_box {
+                padding-left: 30px;
+                padding-right: 30px;
+                border-top: none;
+            }
+        }
+    }
+    .loadingWrap {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        background: rgba(0, 0, 0, 0.3);
+        transition: .3s all ease-in;
+    }
+    .loading {
+        position: absolute;
+        // z-index: 9;
+        width: 450px;
+        height: 200px;
+        padding-top: 100px;
+        top: 50%;
+        left: 50%;
+        margin-top: -150px;
+        margin-left: -200px;
+        background: #fff;
+        border-radius: 3px;
+        text-align: center;
+        i {
+            // padding-top: 100px;
+            font-size: 36px;
+        }
+        p {
+            font-size: 16px;
+            color: #999;
+            margin-top: 33px;
+        }
+    }
+    .block {
+        min-height: 600px;
+        text-align: center;
+        // display: flex;
+        // flex-direction: column;
+        // position: relative;
+        .box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -150px;
+            // margin-left: -100px;
+            .msg {
+                margin-top: 10px;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            .tips {
+                color: #999999;
+            }
+        }
+        // img {
+        //     width: 200px;
+        //     height: 200px;
+        // }
+    }
+}
+</style>

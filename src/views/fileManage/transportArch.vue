@@ -1,0 +1,434 @@
+<!-- 运输车辆车技档案查询 -->
+<template>
+    <div class="carArchives">
+        <!-- <tool-bar>
+            <label>车主单位:</label>
+            <el-input
+                :class="{w200:!smallWindow}"
+                :style="{width:smallWindow?'140px!important':'200px!important'}"
+                class="tool_ipt" v-model="vehicleTransportCertificateBusinessname"
+                placeholder="请输入内容">
+            </el-input>
+            <label>VIN码:</label>
+            <el-input class="tool_ipt" v-model="carVin" placeholder="请输入内容"></el-input>
+            <label>车牌号:</label>
+            <el-input class="tool_ipt" v-model="carNumber" placeholder="请输入内容"></el-input>
+            <el-button class="search_btn" type="primary" icon="el-icon-search" @click="getVehicleInfoList(1)" :disabled="!$checkAuth('bas/vehicle/technicalRecord/findBaseVehicleTechnicalRecord')"></el-button>
+            <el-button class="add_btn" icon="el-icon-add" @click="$router.push('/transportDetail')" :disabled="!$checkAuth('bas:vehicle:technicalRecord:addVehicleTechnicalRecord')">
+                <img src="../../assets/images/iocn_add.png" alt="">
+                <span>新增档案</span>
+            </el-button>
+            <upload
+            class="csv-upload"
+            :on-success="uploadSuccess"
+            :before-upload="beforeUpload" :disabled="!$checkAuth('bas:vehicle:technicalRecord:saveCSV')">
+                <el-button class="import-btn" :disabled="!$checkAuth('bas:vehicle:technicalRecord:saveCSV')">
+                    <span>档案导入</span>
+                </el-button>
+            </upload>
+            <el-button @click="getTemplateDown" class="import-btn" :disabled="!$checkAuth('external:download:vehicleTechnologyTemplate')">
+                <span >模板下载</span>
+            </el-button>
+        </tool-bar> -->
+        <div class="content">
+            <div class="sidebar">
+                <el-scrollbar style="height: 100%;">
+                    <div class="side_item" @click="select(item.vehicleTypeId)" :class="{active: item.vehicleTypeId == chooseId}" v-for="item in sideList" :key="item.vehicleTypeId">{{item.vehicleTypeName}}</div>
+                </el-scrollbar>
+            </div>
+            <div class="table_box">
+                <div class="clearfix table_top table_top_bottom">
+                    <div class="table_top_l clearfix">
+                        <!-- <div class="table_top_ls table_top_ws">
+                            <label>车主单位：</label>
+                            <el-input class="tool_ipt" v-model="vehicleTransportCertificateBusinessname" placeholder="请输入内容"></el-input>
+                        </div> -->
+                        <div class="table_top_ls table_top_ts">
+                            <label>VIN码：</label>
+                            <el-input class="tool_ipt" v-model="carVin" placeholder="请输入内容"></el-input>
+                        </div>
+                        <div class="table_top_ls table_top_ts">
+                            <label>车牌号：</label>
+                            <el-input class="tool_ipt" v-model="carNumber" placeholder="请输入内容"></el-input>
+                        </div>
+                        <div class="table_top_ls" >
+                            <label>车辆类型：</label>
+                            <el-select  class="tool_ipt" v-model="enterpriseIsAudit" clearable placeholder="请选择">
+                                <el-option
+                                v-for="item in [{value:1,label:'小型车'},{value:2,label:'大中型车'}]"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </div>
+                        <div class="table_top_lr table_top_ts fr">
+                            <el-button class="query_btn slects_btn" @click="getVehicleInfoList(1)" :disabled="!$checkAuth('bas:vehicle:technicalRecord:findBaseVehicleTechnicalRecord')">查询</el-button>
+                            <el-button class="react_btn" @click="toReact(1)">重置</el-button>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <el-table
+                        :data="tableData3"
+                        height="640"
+                        v-loading="tableloading"
+                        :header-cell-style="{'text-align':'center'}"
+                        :cell-style="{'text-align':'center'}"
+                        :stripe="false"
+                        style="">
+                        <el-table-column
+                            prop="a1"
+                            label="序号">
+                        </el-table-column>
+                        <!-- <el-table-column
+                            prop="vehicleTransportCertificateBusinessname"
+                            label="车主单位">
+                        </el-table-column> -->
+                        <el-table-column
+                            prop="a2"
+                            label="车牌号码">
+                        </el-table-column>
+                        <el-table-column
+                            prop="a3"
+                            label="车牌颜色">
+                        </el-table-column>
+                        <el-table-column
+                            prop="a4"
+                            label="VIN码">
+                        </el-table-column>
+                        <el-table-column
+                            prop="a5"
+                            label="车辆类型">
+                        </el-table-column>
+                        <el-table-column
+                            prop="a6"
+                            label="分类车辆">
+                        </el-table-column>
+                        <el-table-column
+                            prop="detail"
+                            label="操作">
+                            <template slot-scope="scope">
+                                <!-- <router-link :to="'transportDetail?id=' + scope.row.vehicleTechnicalRecordId" v-if="$checkAuth('bas:vehicle:technicalRecord:editVehicleTechnicalRecord')">详情</router-link> -->
+                                <el-button type="text" size="small" @click="toDetail(scope.row.vehicleTechnicalRecordId)">详情</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="page_box">
+                        <el-pagination
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            :current-page="pageNum"
+                            :page-sizes="[10, 15, 20]"
+                            :page-size="pageSize"
+                            background
+                            layout="prev, pager, next, sizes,  jumper, total"
+                            :total="total">
+                        </el-pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <modal
+        class="import-alert"
+        :width="600"
+        :height="400"
+        :alert="importAlert"
+        @alertCancel="importAlertCancel"
+        :title="'提示'">
+            <div v-html="importAlertCont" class="import-alert-cont"></div>
+        </modal>
+        <bread-foot :breadArr="breadArr" icons="icon-archives-normal" class="bread-foot-box">
+            <el-button class="linone" type="primary"  @click="$router.push('/transportDetail')" >新增档案</el-button>
+            <upload
+            class="csv-upload linone"
+            :on-success="uploadSuccess"
+            :before-upload="beforeUpload" >
+                <el-button type="primary">档案导入</el-button>
+            </upload>
+            <el-button class="linone" type="primary" @click="getTemplateDown" >模板下载</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import Modal from '@/components/Modal.vue'
+import BreadFoot from '@/components/BreadFoot.vue'
+import upload from '@/components/upload.vue'
+import ToolBar from '@/components/ToolBar.vue'
+import { plateColor } from '@/utils/type.js'
+export default {
+    name: 'transportArch',
+    data () {
+        return {
+            breadArr: [
+                { title: '档案管理', path: '' }, { title: '车辆统计', path: '' }
+            ],
+            tableloading: false,
+            smallWindow: false,
+            templateDown: '',
+            importAlert: false,
+            loading: false,
+            importAlertCont: '',
+            sideList: [
+                {
+                    vehicleTypeName: '全部车辆',
+                    vehicleTypeId: 1
+                },
+                {
+                    vehicleTypeName: '乘用车',
+                    vehicleTypeId: 2
+                },
+                {
+                    vehicleTypeName: '商用车',
+                    vehicleTypeId: 3
+                }
+            ],
+            carNumber: '',
+            carVin: '',
+            pageNum: 1,
+            pageSize: 10,
+            total: 0,
+            chooseId: 1, // 选中的id
+            tableData3: [
+                {
+                    a1: '1',
+                    a2: '晋A99855',
+                    a3: '黄色',
+                    a4: '1AS456488',
+                    a5: '小型车',
+                    a6: '商用车'
+                }
+            ],
+            plateColor,
+            vehicleTransportCertificateBusinessname: ''
+        }
+    },
+    components: {
+        BreadFoot,
+        ToolBar,
+        Modal,
+        upload
+    },
+    created () {
+        // this.getVehicleType()
+        // this.getVehicleInfoList()
+    },
+    mounted () {
+        if (document.body.clientWidth < 1450) {
+            this.smallWindow = true
+        } else {
+            this.smallWindow = false
+        }
+        window.onresize = () => {
+            if (document.body.clientWidth < 1450) {
+                this.smallWindow = true
+            } else {
+                this.smallWindow = false
+            }
+        }
+    },
+    methods: {
+        // 详情
+        toDetail (id) {
+            if (!this.$checkAuth('bas:vehicle:technicalRecord:findVehicleTechnicalRecordById')) {
+                this.$alert('暂无权限！', '提示')
+                return
+            }
+            this.$router.push('transportDetail?id=' + id)
+        },
+        // 获取下载模板
+        getTemplateDown () {
+            window.open(window.uploadURL + 'download/vehicleTechnologyTemplate')
+        },
+        // 导入错误弹窗
+        importAlertCancel () {
+            this.importAlert = false
+        },
+        // 上传成功后
+        uploadSuccess (data) {
+            this.$post('bas/vehicle/technicalRecord/saveCSV', {
+                url: data.data
+            }).then(res => {
+                if (res.status === 200) {
+                    this.$toast({
+                        msg: '导入成功'
+                    })
+                    this.getVehicleInfoList()
+                } else {
+                    this.importAlert = true
+                    this.importAlertCont = res.message
+                }
+                this.loading = false
+            })
+        },
+        // 上传之前
+        beforeUpload (file) {
+            const type = /.+(\.xls)|(\.xlsx)$/.test(file.name)
+            const size = file.size / 1024 / 1024 < 8
+            !type && this.$message.error('模板仅支持xls/xlsx格式文件！')
+            !size && this.$message.error('模板大小不能超过8M！')
+            type && size && (this.loading = true)
+            return type && size
+        },
+        subimtBtn () {
+        },
+        // 获取车辆类型
+        getVehicleType () {
+            this.$post('bas/vehicle/type/list', { type: 2 })
+                .then(res => {
+                    if (res.status === 200) {
+                        res.data.unshift({
+                            vehicleTypeId: '',
+                            vehicleTypeName: '全部档案'
+                        })
+                        this.sideList = res.data
+                        this.getVehicleInfoList()
+                    }
+                })
+        },
+        // 获取车技档案列表
+        getVehicleInfoList (clear) {
+            if (clear) {
+                this.pageNum = 1
+            }
+            var obj = {
+                pageNum: this.pageNum,
+                pageSize: this.pageSize
+            }
+            if (this.carVin || this.carNumber || this.vehicleTransportCertificateBusinessname || this.chooseId) {
+                obj.data = {}
+                if (this.carVin) {
+                    obj.data.vehicleTechnicalRecordVin = this.carVin
+                }
+                if (this.carNumber) {
+                    obj.data.vehicleTechnicalRecordLicensePlate = this.carNumber
+                }
+                if (this.vehicleTransportCertificateBusinessname) {
+                    obj.data.vehicleTransportCertificateBusinessname = this.vehicleTransportCertificateBusinessname
+                }
+                if (this.chooseId) {
+                    obj.data.vehicleTechnicalRecordTypeId = this.chooseId
+                }
+            }
+            // this.tableloading = true
+            this.$post('bas/vehicle/technicalRecord/findBaseVehicleTechnicalRecord', obj)
+                .then(res => {
+                    if (res.status === 200) {
+                        res.data.list.forEach((item, index) => {
+                            let ind = ((this.pageNum - 1) * this.pageSize) + index + 1
+                            item.index = ind < 10 ? '0' + ind : ind
+                            this.sideList.forEach(itemC => {
+                                item.vehicleTechnicalRecordTypeId === itemC.vehicleTypeId && (item.vehicleTechnicalRecordTypeId = itemC.vehicleTypeName)
+                            })
+                        })
+                        this.tableData3 = res.data.list
+                        this.total = res.data.total
+                    } else {
+                        this.$alert(res.message, '提示', {
+                            confirmButtonText: '确定',
+                            callback: action => {
+                            }
+                        })
+                    }
+                    this.tableloading = false
+                })
+                .catch(err => {
+                    this.tableloading = false
+                    console.log(err)
+                })
+        },
+        select (id) {
+            this.pageNum = 1
+            this.chooseId = id
+            this.getVehicleInfoList()
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.getVehicleInfoList()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.getVehicleInfoList()
+        }
+    }
+}
+</script>
+
+<style lang='less' scoped>
+.content {
+    position: relative;
+    background: #ffffff;
+    .table_box {
+        padding:20px 30px;
+        margin-left: 220px;
+        a {
+            text-decoration: none;
+            color: #359dff;
+        }
+    }
+    .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 220px;
+        height: 100%;
+        border-right: 1px solid #dddddd;
+        padding: 20px 10px;
+        box-sizing: border-box;
+        .side_item {
+            width: 160px;
+            height: 32px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+            border-radius: 4px;
+            margin: 10px auto 0;
+            line-height: 32px;
+            border: 1px solid #D9D9D9;
+            transition: all .2s;
+            cursor: pointer;
+            &:first-child {
+                margin-top: 0;
+            }
+            &.active {
+                background-color: #1790FF;
+                border: 1px solid #1790FF;
+                color: #ffffff;
+            }
+            &:hover {
+                color: #ffffff;
+                background-color: #1790FF;
+                border: 1px solid #1790FF;
+            }
+        }
+    }
+}
+.import-alert {
+    .import-alert-cont {
+        height: 340px;
+        margin: 10px 20px;
+        padding: 0 30px;
+        box-sizing: border-box;
+        font-size: 14px;
+        color: #333;
+        line-height: 24px;
+        text-align: left;
+        overflow: auto;
+    }
+}
+.carArchives {
+    .bread-foot-box {
+        .linone {
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+            margin-left: 20px;
+            .import-btn {
+                margin: 0 20px;
+            }
+        }
+    }
+}
+</style>

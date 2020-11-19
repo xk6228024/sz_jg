@@ -1,0 +1,339 @@
+<template>
+    <div class="employeesArch-detail">
+        <div class="content">
+            <table class='repair-table' width='100%' border cellpadding='0' cellspacing='0' style='borderColor: #EBEEF5;'>
+                <tr>
+                    <td width='15%' align='center'>企业类型</td>
+                    <td width='35%' align='left' class="disabled">
+                        <span>{{personDetail.enterpriseTypeStr}}</span>
+                    </td>
+                    <td width='15%' align='center'>企业名称</td>
+                    <td width='35%' align='left' class="disabled">
+                        <span>{{personDetail.enterpriseName}}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'>人员姓名</td>
+                    <td align='left' style="padding: 0px;">
+                        <el-input v-model="personDetail.personName" maxlength="25"></el-input>
+                    </td>
+                    <td align='center'>性别</td>
+                    <td align='left' style="padding: 0px;">
+                        <el-select v-model="personDetail.gender" placeholder="请选择">
+                            <el-option
+                                v-for="item in genderList"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'>工作岗位</td>
+                    <td align='left' style="padding: 0px;">
+                        <el-select v-model="personDetail.personWorkType" placeholder="请选择">
+                            <el-option
+                                v-for="item in personDictionary"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </td>
+                    <td align='center'>上岗证编号</td>
+                    <td align='left' style="padding: 0px;">
+                        <el-input v-model="personDetail.personCertno" maxlength="35"></el-input>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'>手机号码</td>
+                    <td align='left'>
+                        <el-input v-model="personDetail.personMobile" maxlength="11"></el-input>
+                    </td>
+                    <td align='center'>电话号码</td>
+                    <td align='left'>
+                        <el-input v-model="personDetail.personTel" maxlength="15"></el-input>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'>身份证号</td>
+                    <td align='left'>
+                        <el-input v-model="personDetail.personIdcardNumber" maxlength="18"></el-input>
+                    </td>
+                    <td align='center'>身份证住址</td>
+                    <td align='left'>
+                        <el-input v-model="personDetail.idCardAddress" maxlength="100"></el-input>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'>培训机构</td>
+                    <td align='left'>
+                        <el-input v-model="personDetail.trainOrganizationName" maxlength="100"></el-input>
+                    </td>
+                    <td align='center'>领取时间</td>
+                    <td align='left'>
+                        <el-date-picker
+                            v-model="personDetail.trainCertTime"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="选择日期">
+                        </el-date-picker>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'>状态</td>
+                    <td align='left'>
+                        <el-select v-model="personDetail.personStatus" placeholder="请选择">
+                            <el-option
+                                v-for="item in personStatus"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </td>
+                    <td align='center'>审核意见</td>
+                    <td align='left'>
+                        <el-input v-model="personDetail.auditBak"  maxlength="200"></el-input>
+                    </td>
+                </tr>
+            </table>
+            <p class="info-title">人员图像</p>
+            <div class='photo'>
+                <img :src="/^http/.test(personDetail.personIcoUrl) ? personDetail.personIcoUrl : 'http://' + personDetail.personIcoUrl" alt="" width='120' height='160'>
+                <el-upload
+                    class="upload-demo"
+                    ref="licenseWrap"
+                    :action="uploadURL + 'attachment/file/upload?token=' + token"
+                    :show-file-list="false"
+                    :before-upload="beforeAvatarUpload"
+                    :on-success="uploadSuccess">
+                    <el-button class="btn" size="small" type="primary">重新上传</el-button>
+                </el-upload>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-archives-normal">
+            <el-button type="primary" @click='save'>保存</el-button>
+            <el-button class="back-btn" @click="$router.go(-1)">返回</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+import CustomTable from '@/components/table'
+import { personDictionary } from '@/utils/type'
+import { getCookie } from '@/utils/cookie'
+export default {
+    name: 'employeesArchDetail',
+    components: {
+        BreadFoot,
+        CustomTable
+    },
+    data () {
+        return {
+            breadArr: [
+                { title: '档案管理', path: '' }, { title: '从业人员档案', path: '' }, { title: '从业人员档案详情', path: '' }
+            ],
+            token: getCookie('token'),
+            personDictionary,
+            genderList: [
+                {
+                    label: '女',
+                    value: 1
+                },
+                {
+                    label: '男',
+                    value: 0
+                }
+            ],
+            personStatus: [
+                {
+                    label: '正常',
+                    value: '0'
+                },
+                {
+                    label: '禁用',
+                    value: '1'
+                }
+            ],
+            personId: '',
+            uploadURL: window.uploadURL,
+            personDetail: {
+                enterpriseTypeStr: '维修企业',
+                enterpriseName: '山西智菱行汽车销售服务有限公司',
+                personName: '李强',
+                gender: 0,
+                personWorkType: 'machine_repair',
+                personCertno: '2304451224',
+                personIdcardNumber: '440154198702035412',
+                personMobile: '13566541121',
+                personTel: '0755-82556545',
+                idCardAddress: '山西智菱行汽车销售服务有限公司',
+                trainOrganizationName: '山东蓝翔汽修学院',
+                trainCertTime: '2020-01-04',
+                personIcoUrl: 'https://ask.qcloudimg.com/http-save/developer-news/4der3cipu1.jpeg?imageView2/2/w/1620',
+                personStatus: '0'
+            }
+        }
+    },
+    created () {
+        // if (this.$route.query.personId) {
+        //     this.personId = this.$route.query.personId
+        //     this.getPersionViewDetail()
+        // }
+    },
+    methods: {
+        getPersionViewDetail () {
+            this.$post('bas/person/findPersionViewDetail', {
+                pageNum: this.pageNum,
+                pageSize: this.pageSize,
+                personId: this.personId
+            }).then(res => {
+                if (res.status === 200 && res.data) {
+                    this.personDetail = res.data
+                }
+            })
+        },
+        beforeAvatarUpload (file) {
+            const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
+            const isLt2M = file.size / 1024 / 1024 < 1
+            if (!isJPG) {
+                this.$message.error('上传图片只能是 JPG/PNG 格式!')
+            }
+            if (!isLt2M) {
+                this.$message.error('上传图片大小不能超过 1MB!')
+            }
+            return isJPG && isLt2M
+        },
+        uploadSuccess (res) {
+            if (res.status === 200) {
+                this.personDetail.personIcoUrl = res.data
+                this.$message({
+                    message: '图片上传成功！',
+                    type: 'success'
+                })
+            }
+        },
+        save () {
+            if (!this.personDetail.personName) {
+                this.$message({
+                    message: '请输入人员姓名',
+                    type: 'error'
+                })
+                return
+            }
+            if (this.personDetail.personMobile && !(/^1\d{10}$/.test(this.personDetail.personMobile))) {
+                this.$message({
+                    message: '请输入正确的手机号码',
+                    type: 'error'
+                })
+                return
+            }
+            if (this.personDetail.personIdcardNumber && !(/^[1-9]\d{7}((0\d)|(1[0-2]))(([0|1|2]\d)|3[0-1])\d{3}$|^[1-9]\d{5}[1-9]\d{3}((0\d)|(1[0-2]))(([0|1|2]\d)|3[0-1])\d{3}([0-9]|X)$/.test(this.personDetail.personIdcardNumber))) {
+                this.$message({
+                    message: '请输入正确的身份证号',
+                    type: 'error'
+                })
+                return
+            }
+            if (this.personDetail.personTel && !(/^\d{3,4}-\d{7,14}|^1\d{10}$/.test(this.personDetail.personTel))) {
+                this.$message({
+                    message: '请输入正确的电话号码',
+                    type: 'error'
+                })
+                return
+            }
+            this.$post('bas/person/updatePersionData', {
+                data: this.personDetail,
+                trainCertTime: this.personDetail.trainCertTime,
+                trainOrganizationName: this.personDetail.trainOrganizationName,
+                trainId: this.personDetail.trainId
+            }).then(res => {
+                if (res.status === 200) {
+                    this.$message({
+                        message: '保存成功！',
+                        type: 'success'
+                    })
+                    this.$router.back()
+                }
+            })
+            // 请求参数
+            // "personId": "00000000002",
+            // "personName": "苏老师",
+            // "gender": 0,
+            // "genderStr": "男",
+            // "personWorkType": "汽修",
+            // "personWorkTypeStr": null,
+            // "personCertno": null,
+            // "personIdcardNumber": "452231199825942152X",
+            // "enterpriseName": null,
+            // "enterprise_type_id": null,
+            // "enterpriseTypeStr": null,
+            // "personMobile": "18344031684",
+            // "personTel": "1379448852",
+            // "idCardAddress": "广西柳州",
+            // "personStatus": "0",
+            // "auditBak": "通过",
+            // "updateTime": null,
+            // "timeString": null,
+            // "personIcoUrl": null
+        }
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.employeesArch-detail {
+    .content {
+        background: #FFF;
+        min-height: 780px;
+        padding: 20px 30px;
+        box-sizing: border-box;
+        .info-title {
+            height: 54px;
+            text-align: left;
+            font-size:14px;
+            font-weight:600;
+            color:rgba(51,51,51,1);
+            line-height:54px;
+        }
+    .repair-table {
+            border: none;
+            td {
+                padding: 8px 0px;
+                font-size: 14px;
+                color: #333;
+            }
+            .disabled {
+                padding: 0px 15px;
+                span {
+                    color: #999;
+                }
+            }
+        }
+        .photo {
+            width: 100%;
+            text-align: left;
+            > img {
+                display: block;
+                border: 1px dashed #eee;
+            }
+            .btn {
+                margin-left: 20px;
+                margin-top: 10px;
+                height: 30px;
+            }
+        }
+    }
+}
+</style>
+
+<style lang="less">
+.employeesArch-detail {
+    .el-input__inner {
+        border: none;
+    }
+}
+</style>

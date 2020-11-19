@@ -1,0 +1,216 @@
+<!-- 从业人员健康数据填报 -->
+<template>
+    <div class="content-page">
+        <search v-model='searchValue' :options='searchOption' @search='getData(1)'  permission='bas:buspersonhealthreportform:findPersonHealthReportformData'></search>
+        <div class="wrap">
+            <custom-table
+            :table-data="dataList"
+            :label-data="labelData"
+            :total="total"
+            :height='630'
+            :currentPage='pageNum'
+            :loading="tableloading"
+            @onPageChange="handleCurrentChange"
+            @onSizeChange="handleSizeChange"
+            >
+                <template slot="leaveLocalTime" slot-scope="scope">
+                    <span>{{ scope.slotData.leaveLocalTime}}</span>
+                </template>
+                <template slot="returnLocalTime" slot-scope="scope">
+                    <span>{{ scope.slotData.returnLocalTime}}</span>
+                </template>
+                <template slot="isReturnWork" slot-scope="scope">
+                    <span>{{ scope.slotData.isReturnWork === 1 ? '是' : '否' }}</span>
+                </template>
+                <template slot="isIsolated" slot-scope="scope">
+                    <span>{{ scope.slotData.isIsolated === 1 ? '是' : '否' }}</span>
+                </template>
+                <template slot="createTime" slot-scope="scope">
+                    <span>{{ scope.slotData.createTime}}</span>
+                </template>
+                <template slot="operation" slot-scope="scope">
+                    <el-button type="text" size="small" :disabled="!$checkAuth('bas:buspersonhealthreportform:findPersonHealthReportformDataDetail')"
+                    @click="$router.push(`/employeesHealthFillInDetail?personHealthReportformId=${scope.slotData.personHealthReportformId}`)">详情</el-button>
+                </template>
+            </custom-table>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-archives-normal"></bread-foot>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+import CustomTable from '@/components/table'
+import Search from '@/components/search'
+import { setNum } from '@/utils/utils.js'
+export default {
+    name: 'employeesHealthFillIn',
+    components: {
+        BreadFoot,
+        CustomTable,
+        Search
+    },
+    data () {
+        return {
+            breadArr: [
+                { title: '档案管理', path: '' }, { title: '从业人员健康数据填报', path: '' }
+            ],
+            searchOption: [
+                {
+                    label: '企业名称',
+                    type: 'input',
+                    key: 'enterpriseName'
+                },
+                {
+                    label: '返回时间',
+                    type: 'date',
+                    key: 'backTime'
+                },
+                {
+                    label: '填报时间',
+                    type: 'date',
+                    key: 'writeTime'
+                }
+            ],
+            searchValue: {},
+            labelData: [
+                {
+                    label: '序号',
+                    prop: 'num',
+                    width: 80
+                },
+                {
+                    label: '姓名',
+                    prop: 'personName',
+                    minWidth: '5%'
+                },
+                {
+                    label: '手机号码',
+                    prop: 'personMobile',
+                    minWidth: '10%'
+                },
+                {
+                    label: '身份证号',
+                    prop: 'personIdcardNumber',
+                    minWidth: '10%'
+                },
+                {
+                    label: '籍贯',
+                    prop: 'personNativePlaceText',
+                    minWidth: '10%'
+                },
+                {
+                    label: '离开本地时间',
+                    slotName: 'leaveLocalTime',
+                    minWidth: '10%'
+                },
+                {
+                    label: '返回本地时间',
+                    slotName: 'returnLocalTime',
+                    minWidth: '10%'
+                },
+                {
+                    label: '是否已复工',
+                    slotName: 'isReturnWork',
+                    minWidth: '8%'
+                },
+                {
+                    label: '是否隔离',
+                    slotName: 'isIsolated',
+                    minWidth: '8%'
+                },
+                {
+                    label: '所属企业',
+                    prop: 'enterpriseName',
+                    minWidth: '20%'
+                },
+                {
+                    label: '填报时间',
+                    slotName: 'createTime',
+                    minWidth: '10%'
+                },
+                {
+                    label: '操作',
+                    slotName: 'operation',
+                    minWidth: '5%'
+                }
+            ],
+            dataList: [
+                {
+                    num: 1,
+                    personName: '李强',
+                    personMobile: '13566541121',
+                    personIdcardNumber: '440154198702035412',
+                    personNativePlaceText: '山西太原',
+                    leaveLocalTime: '2020-01-18',
+                    returnLocalTime: '2020-03-20',
+                    isReturnWork: '是',
+                    isIsolated: '否',
+                    enterpriseName: '山西普洋汽车销售有限公司',
+                    createTime: '2020-04-14'
+                },
+                {
+                    num: 2,
+                    personName: '王美丽',
+                    personMobile: '18845241121',
+                    personIdcardNumber: '440154198702035412',
+                    personNativePlaceText: '山西太原',
+                    leaveLocalTime: '2020-01-20',
+                    returnLocalTime: '2020-04-01',
+                    isReturnWork: '是',
+                    isIsolated: '否',
+                    enterpriseName: '山西智菱行汽车销售服务有限公司',
+                    createTime: '2020-04-14'
+                }
+            ],
+            tableloading: false,
+            pageNum: 1,
+            pageSize: 10,
+            total: 0
+        }
+    },
+    mounted () {
+        this.getData()
+    },
+    methods: {
+        getData (clear) {
+            if (!this.$checkAuth('bas:buspersonhealthreportform:findPersonHealthReportformData')) {
+                this.$alert('暂无查看权限！', '提示')
+                return
+            }
+            if (clear) {
+                this.pageNum = 1
+            }
+            let obj = {
+                pageNum: this.pageNum,
+                pageSize: this.pageSize,
+                // personHealthReportformId: "",
+                enterpriseName: this.searchValue.enterpriseName
+            }
+            if (this.searchValue.backTime && this.searchValue.backTime instanceof Array) {
+                obj.arriveTimeStart = this.searchValue.backTime[0] || ''
+                obj.arriveTimeEnd = (this.searchValue.backTime[1] + 24 * 60 * 60 * 1000 - 1) || ''
+            }
+            if (this.searchValue.writeTime && this.searchValue.writeTime instanceof Array) {
+                obj.writeTimeStart = this.searchValue.writeTime[0] || ''
+                obj.writeTimeEnd = (this.searchValue.writeTime[1] + 24 * 60 * 60 * 1000 - 1) || ''
+            }
+            this.$post('bas/buspersonhealthreportform/findPersonHealthReportformData', obj)
+                .then(res => {
+                    if (res.status === 200 && res.data) {
+                        this.dataList = setNum(res.data.list, this.pageNum, this.pageSize)
+                        this.total = res.data.total
+                    }
+                })
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.getData(1)
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.getData()
+        }
+    }
+}
+</script>

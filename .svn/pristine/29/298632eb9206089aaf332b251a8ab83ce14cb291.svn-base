@@ -1,0 +1,362 @@
+<!-- 备案审核查询 -->
+<template>
+    <div class="recordAuth">
+        <div class="content">
+            <div class="clearfix table_top table_tap_pad">
+                <div class="table_top_l clearfix" :class="{'arrow-active': arrowActive}">
+                    <div class="table_top_ls">
+                        <label>企业名称：</label>
+                        <el-input class="tool_ipt" v-model="searchName" placeholder="请输入内容"></el-input>
+                    </div>
+                    <div class="table_top_ls">
+                        <label>备案类型：</label>
+                        <el-select class="tool_ipt" v-model="searchType" placeholder="请选择">
+                            <el-option label="初次备案" value="0"></el-option>
+                            <el-option label="备案变更" value="1"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="table_top_ls" v-if="arrowActive">
+                        <label>备案来源：</label>
+                        <el-select class="tool_ipt" v-model="searchSource" placeholder="请选择">
+                            <el-option label="监管官网" value="1"></el-option>
+                            <el-option label="协会官网" value="2"></el-option>
+                            <el-option label="监管后台" value="3"></el-option>
+                            <el-option label="协会后台" value="4"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="table_top_ls" v-if="arrowActive">
+                        <label>申请时间：</label>
+                        <el-date-picker
+                            v-model="searchDate"
+                            class="mgr20"
+                            type="daterange"
+                            align="right"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            value-format="timestamp"
+                            >
+                        </el-date-picker>
+                    </div>
+                    <div class="table_top_lr fr">
+                        <el-button type="text" v-if="arrowActive" @click="arrowActive = !arrowActive">收起 <i class="el-icon-arrow-up"></i></el-button>
+                        <el-button type="text" v-if="!arrowActive" @click="arrowActive = !arrowActive">展开 <i class="el-icon-arrow-down"></i></el-button>
+                        <el-button class="query_btn slects_btn" @click="queryData(1)">查询</el-button>
+                        <el-button class="react_btn" @click="toReact">重置</el-button>
+                    </div>
+                </div>
+            </div>
+            <div class='wrap'>
+                <div class="table_box">
+                    <el-table
+                        border
+                        :data="dataList"
+                        v-loading="loading"
+                        :header-cell-style="{'text-align':'center'}"
+                        :cell-style="{'text-align':'center'}"
+                        :stripe="false"
+                        style="width: 100%;min-height:550px;">
+                        <el-table-column
+                        prop="enterpriseName"
+                        label="企业名称">
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseAreaStr"
+                        width="80"
+                        label="所在区域">
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseBusinessCategory"
+                        label="业户类别"
+                        width="80">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.enterpriseBusinessCategory==1">一类</span>
+                                <span v-if="scope.row.enterpriseBusinessCategory==2">二类</span>
+                                <span v-if="scope.row.enterpriseBusinessCategory==3">三类</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseRecordTypeStr"
+                        label="备案类型"
+                        width="100">
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseSource"
+                        width="100"
+                        label="备案来源">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.enterpriseSource==1">监管官网</span>
+                                <span v-if="scope.row.enterpriseSource==2">协会官网</span>
+                                <span v-if="scope.row.enterpriseSource==3">监管后台</span>
+                                <span v-if="scope.row.enterpriseSource==4">协会后台</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseOwner"
+                        width="100"
+                        label="联系人">
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseOwnerPhone"
+                        label="联系电话">
+                        </el-table-column>
+                        <el-table-column
+                        prop="enterpriseDetailedAddress"
+                        label="经营地址">
+                        </el-table-column>
+                        <el-table-column
+                        prop="createTime"
+                        label="申请时间">
+                            <!-- <template slot-scope="scope">
+                                {{scope.row.createTime|momentTime}}
+                            </template> -->
+                        </el-table-column>
+                        <el-table-column
+                            prop="name"
+                            label="操作"
+                            width="80">
+                            <template slot-scope="scope">
+                                <div>
+                                    <el-button type="text" size="small" @click="goDetail(scope.row.enterpriseRecordId)" :disabled="!$checkAuth('enterprise:record:view')">审核</el-button>
+                                </div>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+                <div class="page_box">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="[10, 15, 20, 25]"
+                        :page-size="pageSize"
+                        background
+                        layout="prev, pager, next, sizes,  jumper, total"
+                        :total="total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-business-normal">
+            <el-button type="primary" @click="addRecord" :disabled="!$checkAuth('external:enterpriseFiling:submitEntFiling')">新增企业备案</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script type="text/javascript">
+import BreadFoot from '@/components/BreadFoot.vue'
+import ToolBar from '@/components/ToolBar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import moment from 'moment'
+export default {
+    name: 'recordAuth',
+    // 组件属性、变量、用于接收父组件的传值
+    props: {},
+    // 变量
+    data () {
+        return {
+            breadArr: [
+                { title: '业务操作', path: '' }, { title: '企业备案审核', path: '' }
+            ],
+            total: 10,
+            pageNum: 1,
+            pageSize: 10,
+            currentPage: 1, // 当前页数
+            loading: false,
+            dataList: [
+                {
+                    num: '01',
+                    enterpriseName: '深蓝汽车服务有限公司',
+                    enterpriseAreaStr: '宝安区',
+                    enterpriseBusinessCategory: '1',
+                    enterpriseRecordTypeStr: '初次备案',
+                    enterpriseSource: '1',
+                    enterpriseOwner: '特斯拉',
+                    enterpriseOwnerPhone: '13265477781',
+                    enterpriseDetailedAddress: '宝安区来宾路1-2号',
+                    createTime: '2020-01-09 18:00:00'
+                },
+                {
+                    num: '02',
+                    enterpriseName: '罗马汽车服务有限公司',
+                    enterpriseAreaStr: '宝安区',
+                    enterpriseBusinessCategory: '2',
+                    enterpriseRecordTypeStr: '备案变更',
+                    enterpriseSource: '2',
+                    enterpriseOwner: '海蒂',
+                    enterpriseOwnerPhone: '13265477781',
+                    enterpriseDetailedAddress: '宝安区西湖路10-1号',
+                    createTime: '2020-01-09 18:00:00'
+                },
+                {
+                    num: '03',
+                    enterpriseName: '紫罗兰汽车服务有限公司',
+                    enterpriseAreaStr: '宝安区',
+                    enterpriseBusinessCategory: '3',
+                    enterpriseRecordTypeStr: '初次备案',
+                    enterpriseSource: '3',
+                    enterpriseOwner: '拉玛',
+                    enterpriseOwnerPhone: '13265477781',
+                    enterpriseDetailedAddress: '宝安区民主大道11-11号',
+                    createTime: '2020-01-09 18:00:00'
+                },
+                {
+                    num: '04',
+                    enterpriseName: '深圳市宝安区阿柱汽车冷气维修部',
+                    enterpriseAreaStr: '宝安区',
+                    enterpriseBusinessCategory: '3',
+                    enterpriseRecordTypeStr: '初次备案',
+                    enterpriseSource: '3',
+                    enterpriseOwner: '逻辑',
+                    enterpriseOwnerPhone: '13265477781',
+                    enterpriseDetailedAddress: '宝安区民主大道11-11号',
+                    createTime: '2020-01-09 18:00:00'
+                },
+                {
+                    num: '05',
+                    enterpriseName: '深圳市南山区汉枫汽车服务有限公司',
+                    enterpriseAreaStr: '南山区',
+                    enterpriseBusinessCategory: '3',
+                    enterpriseRecordTypeStr: '初次备案',
+                    enterpriseSource: '3',
+                    enterpriseOwner: '贺秀莲',
+                    enterpriseOwnerPhone: '13265477781',
+                    enterpriseDetailedAddress: '宝安区民主大道11-11号',
+                    createTime: '2020-01-09 18:00:00'
+                }
+            ],
+            arrowActive: true, // 展开
+            searchName: '', // 搜索企业名称
+            searchType: '', // 搜索备案类型
+            searchSource: '', // 搜索备案来源
+            searchDate: [] // 搜索日期
+        }
+    },
+    created () {
+        // this.queryData()
+    },
+    computed: {},
+    filters: {
+        statusFilter: function (val) {
+            if (val === 1) {
+                return '审核通过'
+            }
+            if (val === 0) {
+                return '待审核'
+            }
+            if (val === -1) {
+                return '审核拒绝'
+            }
+        },
+        momentTime: function (val) {
+            if (!val) return ''
+            return moment(val).format('YYYY-MM-DD')
+        }
+    },
+    // 使用其它组件
+    components: {
+        BreadFoot,
+        ToolBar,
+        Sidebar,
+        moment
+    },
+    // 方法
+    watch: {},
+    methods: {
+        queryData (clear) {
+            if (clear) {
+                this.pageNum = 1
+            }
+            if (!this.$checkAuth('enterprise:record:findList')) {
+                this.$alert('没有查询权限！', '提示')
+                return
+            }
+            this.loading = true
+            // sys/notice/find
+            this.$post(`enterprise/record/findList?pageNum=${this.pageNum}&pageSize=${this.pageSize}`, {
+                'pageNum': this.pageNum,
+                'pageSize': this.pageSize,
+                applyTimeStart: this.searchDate ? this.searchDate[0] : '',
+                applyTimeEnd: this.searchDate ? this.searchDate[1] + 24 * 60 * 60 * 1000 - 1 : '',
+                enterpriseName: this.searchName,
+                enterpriseRecordType: this.searchType,
+                enterpriseSource: this.searchSource
+            }).then(res => {
+                if (res.status === 200) {
+                    this.dataList = res.data.list
+                    this.total = res.data.total
+                }
+                this.loading = false
+            }).catch(err => {
+                this.loading = false
+                console.log(err)
+            })
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.queryData()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.queryData()
+        },
+        // 认证
+        goDetail (id) {
+            this.$router.push('/recordAuthDetail?id=' + id)
+        },
+        // 新增
+        addRecord () {
+            this.$router.push('/recordApply')
+        },
+        // 重置
+        toReact () {
+            this.searchName = ''
+            this.searchType = ''
+            this.searchSource = ''
+            this.searchDate = []
+        }
+    },
+    // 生命周期函数
+    beforeCreate () {},
+    mounted () {}
+}
+</script>
+
+<style lang="less" scoped>
+.recordAuth {
+    .add_btn {
+        img {
+            margin-right: 8px;
+        }
+    }
+    .content {
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        top: 0;
+        background-color: #ffffff;
+        padding-bottom: 80px;
+        .table_tap_pad {
+            padding: 25px 30px;
+        }
+        .page_top {
+            height: 66px;
+            line-height: 66px;
+            padding: 0 30px;
+            font-size: 14px;
+            overflow: hidden;
+        }
+        .wrap {
+            padding: 0 30px;
+            .table_box {
+                border: 1px solid #dddddd;
+                border-bottom: none;
+            }
+            .page_box {
+                border-top: none;
+            }
+        }
+    }
+}
+</style>

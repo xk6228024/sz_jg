@@ -1,0 +1,1434 @@
+<template>
+    <div class="home">
+        <div class="content">
+             <el-scrollbar>
+                <div class="bos-row clearfix">
+                    <el-row class="ppbox">
+                        <el-col :span="4" class="ppItem" v-for="(item,index) in ppList" :key="item.aa">
+                            <div class="ppInner" :class="{'active': ppIndex===index}" @click="changeIndex(index)">
+                                <img :src="item.imgUrl"/>
+                                <div class="ppText dlb tal">
+                                    <p class="p1">{{item.num}}</p>
+                                    <p class="p2">{{item.name}}({{item.remark}})</p>
+                                </div>
+                            </div>
+                        </el-col>
+                    </el-row>
+                    <!-- <div class="ppbox" >
+                        <div class="ppItem" v-for="(item,index) in ppList" :key="item.aa" :style="{'border-color': ppIndex===index?item.color:'#fff'}">
+                            <div class="ppInner" :class="{'active': ppIndex===index}" :style="{color:ppIndex===index?item.color:''}" @click="changeIndex(index)">
+                                <p class="p1">{{item.num}}</p>
+                                <p class="p2">{{item.name}}({{item.remark}})</p>
+                                <img :src="item.imgUrl"/>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+             </el-scrollbar>
+            <div class="bos-card boxs-tab">
+                <div class="tabs-bar clearfix" style="background:#ffffff;">
+                    <div class="tabs-tit clearfix">
+                        <span class="tabs-tit-text" :style="{color: activeTab===1?'#1890FF':'#666'}" @click="activeTab=1">{{this.showHeader}}</span>
+                        <div class="fr">
+                            <div class="dlb" v-if="/^(0|1|2|4)$/.test(ppIndex)">
+                                <label class="label">经营类别：</label>
+                                <el-select v-model="radioF" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in bussinessCategory"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div class="dlb" v-if="ppIndex === 0">
+                                <label class="label">备案状态：</label>
+                                <el-select v-model="radioA" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option label="已备案" value="1"></el-option>
+                                    <el-option label="未备案" value="0"></el-option>
+                                </el-select>
+                            </div>
+                            <div class="dlb" v-if="ppIndex === 1">
+                                <label class="label">勘验状态：</label>
+                                <el-select v-model="radioB" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in inquestInfo"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 3" class="dlb">
+                                <label class="label">维修类型：</label>
+                                <el-select v-model="radioE" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in repairType"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="/11|12|13|14/.test(ppIndex)" class="dlb">
+                                <label class="label">车辆类型：</label>
+                                <el-select v-model="vehicleCategory" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in transportCarType"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 4" class="dlb">
+                                <label class="label">状态：</label>
+                                <el-select v-model="radioE" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option label="已发放" :value="2"></el-option>
+                                    <el-option label="已使用" :value="3"></el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 5" class="dlb">
+                                <label class="label">工种：</label>
+                                <el-select v-model="personDictionaryCategory" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in personDictionary"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 6" class="dlb">
+                                <label class="label">车辆类型：</label>
+                                <el-select v-model="vehicleTypeStr" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in vehicleType"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 6" class="dlb">
+                                <label class="label">使用性质：</label>
+                                <el-select v-model="useType" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option label="营运" value="1"></el-option>
+                                    <el-option label="非营运" value="0"></el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 7" class="dlb">
+                                <label class="label">企业等级：</label>
+                                <el-select v-model="jcGrade" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in jcGradeList"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 8" class="dlb">
+                                <label class="label">经营范围：</label>
+                                <el-select v-model="transportBusinessScopeStr" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in transportBusinessScope"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <div v-if="ppIndex === 9" class="dlb">
+                                <label class="label">检测类别：</label>
+                                <el-select v-model="transportCheckTypeStr" placeholder="请选择" size="small">
+                                    <el-option label="全部" value=""></el-option>
+                                    <el-option
+                                        v-for="item in transportCheckType"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            <label class="label">选择日期：</label>
+                            <el-date-picker
+                                size="small"
+                                :style="{'border-color':activeTime==='range'?'#1890FF':''}"
+                                class="extra-time dateSelect"
+                                v-model="daterange"
+                                type="daterange"
+                                align="right"
+                                value-format="timestamp"
+                                unlink-panels
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期"
+                                :picker-options="pickerOptions"
+                                @change="chooseTime('range')"
+                                >
+                            </el-date-picker>
+                        </div>
+                    </div>
+                    <!-- <div class="fr" v-if="[5,6,7,8,9].indexOf(ppIndex)!==-1">
+                        <div class="extra-wrap">
+                            <span :class="{'active': activeTime==='week'}" @click="chooseTime('week')">本周</span>
+                            <span :class="{'active': activeTime==='month'}" @click="chooseTime('month')">本月</span>
+                            <span :class="{'active': activeTime==='year'}" @click="chooseTime('year')">全年</span>
+                        </div>
+                        <el-date-picker
+                            :style="{'border-color':activeTime==='range'?'#1890FF':''}"
+                            class="extra-time dateSelect"
+                            v-model="daterange"
+                            type="daterange"
+                            align="right"
+                            value-format="timestamp"
+                            unlink-panels
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            :picker-options="pickerOptions"
+                            @change="chooseTime('range')"
+                            >
+                        </el-date-picker>
+                    </div> -->
+                </div>
+                <div class="tabs-content clearfix">
+                    <el-row :gutter="20">
+                        <el-col :span="17" class="bbox bbox1" style="text-align:center;">
+                            <div style="width:800px;height:500px;display:inline-block;position:relative;">
+                                <div id="mapChart" style="width:100%;height:100%;"></div>
+                            </div>
+                        </el-col>
+                        <el-col :span="7" class="bbox">
+                            <div id="cccccc" style="width: 100%; height: 450px;"></div>
+                        </el-col>
+                    </el-row>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import echarts from 'echarts'
+import moment from 'moment'
+import mapJson from '@/assets/js/zqMap.json'
+import { bussinessCategory, inquestInfo, repairType, transportCarType, personDictionary, vehicleType,
+    jcGradeList, transportBusinessScope, transportCheckType } from '@/utils/type.js'
+import { mapGetters } from 'vuex'
+export default {
+    name: 'home',
+    components: {
+        moment
+    },
+    data () {
+        return {
+            bussinessCategory,
+            inquestInfo,
+            repairType,
+            transportCarType,
+            personDictionary,
+            vehicleType,
+            jcGradeList,
+            transportBusinessScope,
+            transportBusinessScopeStr: '',
+            transportCheckType,
+            transportCheckTypeStr: '',
+            jcGrade: '',
+            vehicleCategory: '',
+            radioB: '',
+            radioA: '',
+            category: '',
+            radioE: '',
+            radioF: '',
+            personDictionaryCategory: '',
+            vehicleTypeStr: '',
+            useType: '',
+            mapChart: '',
+            option: {
+                visualMap: {
+                    show: false,
+                    min: 1,
+                    max: 40,
+                    left: '1%',
+                    bottom: '1%',
+                    itemWidth: 25,
+                    itemHeight: 100,
+                    text: ['High', 'Low'],
+                    realtime: false,
+                    calculable: true,
+                    textStyle: {
+                        color: '#fff',
+                        fontSize: '20'
+                    },
+                    inRange: {
+                        color: ['#6BB279', '#368482']
+                    }
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+
+                series: [{
+                    name: '地图',
+                    type: 'map',
+                    mapType: 'map',
+                    zoom: 1,
+                    label: {
+                        normal: {
+                            show: true,
+                            textStyle: {
+                                color: '#fff',
+                                fontSize: '13'
+                            }
+                        },
+                        emphasis: {
+                            show: true,
+                            textStyle: { color: '#fff',
+                                fontSize: '16' }
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function (params) {
+                            if (params.name && !isNaN(params.value)) {
+                                return params.name + ' : ' + params.value
+                            } else {
+                                return ''
+                            }
+                        }
+                    },
+                    roam: false,
+                    itemStyle: {
+                        normal: {
+                            areaColor: 'rgba(7,157,233,0.4)',
+                            borderColor: '#ddd'
+
+                        },
+                        emphasis: {
+                            areaColor: '#3093d8'
+                        }
+                    },
+                    data: [
+                    ]
+                }]
+            },
+            radio: 1,
+            checkList: [],
+            showHeader: '企业备案',
+            ppList: [
+                {
+                    name: '企业备案',
+                    imgUrl: 'img/demo/home (3).png',
+                    num: 0,
+                    color: '#4DCB73',
+                    remark: '家'
+                },
+                {
+                    name: '现场勘验',
+                    imgUrl: 'img/demo/home (9).png',
+                    num: 0,
+                    color: '#3AA0FF',
+                    remark: '家'
+                },
+                {
+                    name: '维修企业档案',
+                    imgUrl: 'img/demo/home (10).png',
+                    num: 0,
+                    color: '#FAAD14',
+                    remark: '份'
+                },
+                {
+                    name: '电子健康档案',
+                    imgUrl: 'img/demo/home (6).png',
+                    remark: '条',
+                    color: '#975FE4',
+                    num: 0
+                },
+                {
+                    name: '合格证',
+                    imgUrl: 'img/demo/home (7).png',
+                    remark: '张',
+                    color: '#37CBCB',
+                    num: 0
+                },
+                {
+                    name: '从业人员',
+                    imgUrl: 'img/demo/home (5).png',
+                    remark: '人',
+                    num: 1689
+                },
+                {
+                    name: '车辆档案',
+                    imgUrl: 'img/demo/home (4).png',
+                    num: 5729,
+                    remark: '份'
+                },
+                {
+                    name: '检测企业',
+                    imgUrl: 'img/demo/home (8).png',
+                    remark: '家',
+                    num: 3287658
+                },
+                {
+                    name: '运输企业',
+                    imgUrl: 'img/demo/home (1).png',
+                    remark: '家',
+                    num: 3215
+                },
+                {
+                    name: '运输车检测',
+                    imgUrl: 'img/demo/home (9).png',
+                    remark: '条',
+                    num: 1689
+                },
+                {
+                    name: '运输车维护',
+                    imgUrl: 'img/demo/home (11).png',
+                    num: 5729,
+                    remark: '条'
+                },
+                {
+                    name: '维护超期',
+                    imgUrl: 'img/demo/whcq.png',
+                    remark: '辆',
+                    num: 5729
+                },
+                {
+                    name: '检测超期',
+                    imgUrl: 'img/demo/jccq.png',
+                    remark: '辆',
+                    num: 5729
+                },
+                {
+                    name: '未制定维护计划',
+                    imgUrl: 'img/demo/wzdwhjh.png',
+                    remark: '辆',
+                    num: 5729
+                },
+                {
+                    name: '未归档车辆',
+                    imgUrl: 'img/demo/wgdcl.png',
+                    remark: '辆',
+                    num: 5729
+                }
+            ],
+            ppIndex: 0,
+            activeTab: 1,
+            bosOption1: {
+                grid: {
+                    left: 0,
+                    bottom: 0,
+                    top: 5
+                },
+                tooltip: {
+                    formatter: '{b}  {c}',
+                    backgroundColor: '#ccc',
+                    borderColor: '#111',
+                    textStyle: {
+                        color: '#222'
+                    },
+                    padding: 2
+                },
+                xAxis: {
+                    data: []
+                },
+                yAxis: {
+                    show: false
+                },
+                series: [{
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#33ABFB'
+                    },
+                    data: []
+                }]
+            },
+            bosOption2: {
+                grid: {
+                    left: 0,
+                    bottom: 0,
+                    top: 5
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    textStyle: {
+                        fontSize: '14px',
+                        color: '#666'
+                    },
+                    formatter: '{b}点  {c}次',
+                    padding: [8, 10, 8, 10],
+                    confine: true,
+                    axisPointer: {
+                        type: 'none'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: []
+                },
+                yAxis: {
+                    show: false,
+                    position: 'left'
+                },
+                series: [{
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'emptyCircle',
+                    showSymbol: false,
+                    itemStyle: {
+                        color: '#8543E0'
+                    },
+                    areaStyle: {},
+                    data: []
+                }]
+            },
+            // 中间表单
+            bosTabOption: {
+                tooltip: {
+                    formatter: '{b0} {c0}',
+                    backgroundColor: '#ccc',
+                    borderColor: '#111',
+                    textStyle: {
+                        color: '#222'
+                    },
+                    padding: 2
+                },
+                grid: {
+                    left: 50,
+                    bottom: 50
+                },
+                xAxis: {
+                    axisLine: {
+                        lineStyle: {
+                            color: '#595959'
+                        }
+                    },
+                    data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+                },
+                yAxis: {
+                    minInterval: 1,
+                    axisLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#E8E8E8',
+                            type: 'dashed'
+                        }
+                    }
+                },
+                series: [{
+                    type: 'bar',
+                    // width: 20,
+                    barMaxWidth: 50,
+                    itemStyle: {
+                        width: 20,
+                        color: '#33ABFB'
+                    },
+                    data: [7, 5, 4, 2, 4, 7, 5, 6, 5, 9, 6, 3, 1, 5, 3, 6, 5]
+                }]
+            },
+            // 企业排名
+            rankingList: [],
+            // 底下列表
+            editableTabs: [
+                { name: '万柏林区', value: '88%' },
+                { name: '万柏林区', value: '88%' },
+                { name: '万柏林区', value: '88%' },
+                { name: '万柏林区', value: '88%' },
+                { name: '万柏林区', value: '88%' },
+                { name: '万柏林区', value: '88%' },
+                { name: '万柏林区', value: '88%' }
+            ],
+            pickerOptions: {
+                shortcuts: [{
+                    text: '最近一个月',
+                    onClick (picker) {
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+                        picker.$emit('pick', [start, end])
+                    }
+                }],
+                onPick: ({ maxDate, minDate }) => {
+                    this.choiceDate = minDate.getTime()
+                    if (maxDate) {
+                        this.choiceDate = ''
+                    }
+                },
+                disabledDate: (time) => {
+                    if (this.choiceDate) {
+                        const one = 30 * 24 * 3600 * 1000
+                        const minTime = this.choiceDate - one
+                        const maxTime = this.choiceDate + one
+                        return time.getTime() < minTime || time.getTime() > maxTime
+                    }
+                }
+            },
+            activeTime: 'week', // 健康档案时间选择
+            daterange: []
+        }
+    },
+    filters: {
+        momentTime: function (val) {
+            return moment(val).format('YYYY-MM-DD')
+        }
+    },
+    watch: {
+        activeTab (val) {
+            // console.log(val)
+            // this.activeTime = 'week'
+            // let obj = this.getFirstDayOfWeek()
+            // this.getTrendAndUploadTop(1, obj.stime, obj.etime)
+        },
+        radioA (val) {
+            this.getRegionCount()
+        },
+        radioB (val) {
+            this.getRegionCount()
+        },
+        category (val) {
+            this.getRegionCount()
+        },
+        radioE (val) {
+            this.getRegionCount()
+        },
+        radioF (val) {
+            this.getRegionCount()
+        },
+        daterange (val) {
+            this.getRegionCount()
+        },
+        ppIndex (val) {
+            this.getRegionCount()
+        }
+    },
+    methods: {
+        getRegionCount () {
+            let parmas = {}
+            if (this.ppIndex - 0 === 0) {
+                parmas.countType = 'recordEnt'
+                parmas.status = this.radioA
+                parmas.category = this.category
+            } else if (this.ppIndex - 0 === 1) {
+                parmas.countType = 'inquestEnt'
+                parmas.status = this.radioB
+                parmas.category = this.category
+            } else if (this.ppIndex - 0 === 2) {
+                parmas.countType = 'repairEnt'
+                parmas.category = this.category
+            } else if (this.ppIndex - 0 === 3) {
+                parmas.countType = 'repairRecord'
+            } else if (this.ppIndex - 0 === 4) {
+                parmas.enterpriseBusinessCategory = this.radioF
+                parmas.dataType = this.radioE
+            }
+            if (this.daterange && this.daterange.length) {
+                parmas.startDate = this.daterange[0]
+                parmas.endDate = this.daterange[1]
+                parmas.startTime = this.$filterTime(this.daterange[0], 'yyyy-mm-dd')
+                parmas.endTime = this.$filterTime(this.daterange[1], 'yyyy-mm-dd')
+            }
+            if (this.ppIndex === 4) {
+                this.$post('/vehicle/fix/certificate/stasticbyregion', parmas)
+                    .then(res => {
+                        if (res.status === 200 && res.data && res.data.length) {
+                            let data = res.data.map(e => {
+                                return {
+                                    name: e.regionName,
+                                    value: e.total
+                                }
+                            })
+                            this.renderMap(data)
+                        } else {
+                            this.$message({
+                                message: '暂无数据'
+                            })
+                        }
+                    })
+                return
+            }
+            this.$post('home/count/region', parmas).then(res => {
+                if (res.status === 200) {
+                    if (res.data && res.data.length) {
+                        let data = res.data.map(e => {
+                            return {
+                                name: e.keyName,
+                                value: e.valCount || 0
+                            }
+                        })
+                        this.renderMap(data)
+                    } else {
+                        this.$message({
+                            message: '暂无数据'
+                        })
+                    }
+                }
+            })
+        },
+        renderMap (data) {
+            if (data.length > 15) {
+                data.length = 15
+            }
+            data.sort((a, b) => {
+                return a.value - b.value
+            })
+            this.newChart(data)
+            this.option.series[0].data = data
+            this.option.visualMap.min = 1
+            this.option.visualMap.max = data[0].value
+            this.mapChart.setOption(this.option)
+        },
+        goPage () {
+            if (this.ppIndex === 0) {
+                this.$router.push('/companyArchw')
+            } else if (this.ppIndex === 1) {
+                this.$router.push('/companyArchy')
+            } else if (this.ppIndex === 2) {
+                this.$router.push('/companyArchj')
+            } else if (this.ppIndex === 3) {
+                this.$router.push('/transportArch')
+            } else if (this.ppIndex === 4) {
+                this.$router.push('/erweiWork')
+            } else if (this.ppIndex === 5) {
+                this.$router.push('/recordInfoSearch')
+            } else if (this.ppIndex === 6) {
+                this.$router.push('/recordInfoSearch2')
+            } else if (this.ppIndex === 7) {
+                this.$router.push('/transportArch2')
+            } else if (this.ppIndex === 8) {
+                this.$router.push('/maintainRecord')
+            } else if (this.ppIndex === 9) {
+                this.$router.push('/complainApply')
+            }
+        },
+        changeIndex (index) {
+            if (index !== this.ppIndex) {
+                this.ppIndex = index
+                this.showHeader = this.ppList[index].name
+            }
+        },
+        timeFormat (timestamp) {
+            let date = new Date(timestamp)
+            let Y = date.getFullYear()
+            let M = date.getMonth() + 1
+            if (M < 10) {
+                M = '0' + M
+            }
+            let D = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
+            let h = date.getHours() < 10 ? '0' + date.getHours() : date.getHours()
+            let m = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()
+            let s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()
+            return Y + '-' + M + '-' + D + ' ' + h + ':' + m + ':' + s
+        },
+        // 获取指定日期的星期一和星期天, 不传则获取本周
+        getFirstDayOfWeek (time) {
+            let date = time ? new Date(time) : new Date()
+            let firstDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() - (date.getDay() || 7) + 1, 0, 0, 0) - 0
+            let lastDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7 - (date.getDay() || 7), 0, 0, 0) - 0 + 24 * 60 * 60 * 1000 - 1
+            let s = this.timeFormat(firstDay)
+            let e = this.timeFormat(lastDay)
+            return {
+                stime: s,
+                etime: e
+            }
+        },
+        // 获取指定月份的第一天和最后一天，不传则获取当月
+        getFirstDayOfMonth (time) {
+            let date = time ? new Date(time) : new Date()
+            let firstDay = new Date(date.getFullYear(), date.getMonth(), 1) - 0
+            let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0) - 0 + 24 * 60 * 60 * 1000 - 1
+            return {
+                stime: this.timeFormat(firstDay),
+                etime: this.timeFormat(lastDay)
+            }
+        },
+        // 获取指定年份的第一天和最后一天，不传则获取今年
+        getFirstDayOfYear (time) {
+            let date = time ? new Date(time) : new Date()
+            let firstDay = new Date(date.getFullYear(), 0, 1) - 0
+            let lastDay = new Date(date.getFullYear(), 12, 0) - 0 + 24 * 60 * 60 * 1000 - 1
+            return {
+                stime: this.timeFormat(firstDay),
+                etime: this.timeFormat(lastDay)
+            }
+        },
+        // 选择
+        chooseTime (val) {
+            // this.activeTime = val
+            // if (val === 'week') {
+            //     let obj = this.getFirstDayOfWeek()
+            //     this.getTrendAndUploadTop(1, obj.stime, obj.etime)
+            // } else if (val === 'month') {
+            //     let obj = this.getFirstDayOfMonth()
+            //     this.getTrendAndUploadTop(2, obj.stime, obj.etime)
+            // } else if (val === 'year') {
+            //     let obj = this.getFirstDayOfYear()
+            //     this.getTrendAndUploadTop(3, obj.stime, obj.etime)
+            // } else if (val === 'range') {
+            //     this.getTrendAndUploadTop(4, this.daterange[0], this.daterange[1] + 24 * 60 * 60 * 1000 - 1000)
+            // }
+        },
+        newChart (res = []) {
+            let data = res
+            let getArrByKey = (data, k) => {
+                let key = k || 'value'
+                let res = []
+                if (data) {
+                    data.forEach(function (t) {
+                        res.push(t[key])
+                    })
+                }
+                return res
+            }
+            let opt = {
+                index: 0
+            }
+            let color = ['#FC619D', '#FF904D', '#48BFE3']
+            data = data.sort((a, b) => {
+                return b.value - a.value
+            })
+            let option = {
+                grid: {
+                    top: '2%',
+                    bottom: -15,
+                    right: 30,
+                    left: -30,
+                    containLabel: true
+                },
+                xAxis: {
+                    show: false
+                },
+                yAxis: [{
+                    triggerEvent: true,
+                    show: true,
+                    inverse: true,
+                    data: getArrByKey(data, 'name'),
+                    axisLine: {
+                        show: false
+                    },
+                    splitLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    axisLabel: {
+                        interval: 0,
+                        color: '#666',
+                        align: 'left',
+                        margin: 80,
+                        fontSize: 13,
+                        formatter: function (value, index) {
+                            if (opt.index === 0 && index < 3) {
+                                return '{idx' + index + '|' + (1 + index) + '} {title|' + value + '}'
+                            } else if (opt.index !== 0 && (index + opt.index) < 9) {
+                                return '{idx|0' + (1 + index + opt.index) + '} {title|' + value + '}'
+                            } else {
+                                return '{idx|' + (1 + index + opt.index) + '} {title|' + value + '}'
+                            }
+                        },
+                        rich: {
+                            idx0: {
+                                color: '#FB375E',
+                                backgroundColor: '#FFE8EC',
+                                borderRadius: 100,
+                                padding: [5, 8]
+                            },
+                            idx1: {
+                                color: '#FF9023',
+                                backgroundColor: '#FFEACF',
+                                borderRadius: 100,
+                                padding: [5, 8]
+                            },
+                            idx2: {
+                                color: '#01B599',
+                                backgroundColor: '#E1F7F3',
+                                borderRadius: 100,
+                                padding: [5, 8]
+                            },
+                            idx: {
+                                color: '#333',
+                                borderRadius: 100,
+                                padding: [5, 8]
+                            },
+                            title: {
+                                width: 165
+                            }
+                        }
+                    }
+                }, {
+                    triggerEvent: true,
+                    show: true,
+                    inverse: true,
+                    data: getArrByKey(data, 'name'),
+                    axisLine: {
+                        show: false
+                    },
+                    splitLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    axisLabel: {
+                        interval: 0,
+                        color: '#666',
+                        align: 'left',
+                        margin: 20,
+                        fontSize: 13,
+                        formatter: function (value, index) {
+                            return data[index].value
+                        }
+                    }
+                }],
+                series: [{
+                    name: '条',
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: data,
+                    barWidth: 10,
+                    itemStyle: {
+                        color: (val) => {
+                            if (val.dataIndex < 3 && opt.index === 0) {
+                                return color[val.dataIndex]
+                            } else {
+                                return '#1990FF'
+                            }
+                        },
+                        barBorderRadius: 30
+                    }
+                }]
+            }
+            option.series[0].itemStyle.opacity = 1
+            option.series.length = 1
+            let cccccc = echarts.init(document.getElementById('cccccc'))
+            cccccc.setOption(option)
+            window.onresize = () => {
+                cccccc.resize()
+            }
+        },
+        drawMap () {
+            echarts.registerMap('map', mapJson)
+            this.mapChart = echarts.init(document.getElementById('mapChart'))
+            this.mapChart.on('click', (e) => {
+                let region = this.regionList.find(f => {
+                    return f.regionName === e.data.name
+                }) || {}
+                if (region && !region.regionId) {
+                    region.regionId = ''
+                }
+                if (this.ppIndex === 0) {
+                    this.$router.push('/recordInfoSearch?region=' + region.regionId)
+                } else if (this.ppIndex === 1) {
+                    this.$router.push('/inquestInfo?region=' + region.regionId)
+                } else if (this.ppIndex === 2) {
+                    this.$router.push('/companyArchw?region=' + region.regionId)
+                } else if (this.ppIndex === 3) {
+                    this.$router.push('/healthyArch?region=' + region.regionId)
+                } else if (this.ppIndex === 4) {
+                    this.$router.push('/issuanceCard?region=' + region.regionId)
+                }
+            })
+            // this.option = {
+            // }
+            this.mapChart.setOption(this.option)
+        }
+    },
+    computed: {
+        ...mapGetters(['regionList'])
+    },
+    created () {
+        this.getRegionCount()
+        // 数据统计
+        this.$post('home/count/all').then(res => {
+            this.ppList[0].num = res.data.recordEntCount
+            this.ppList[1].num = res.data.inquestEntCount
+            this.ppList[2].num = res.data.repairEntCount
+            this.ppList[3].num = res.data.repairRecordCount
+            this.ppList[4].num = res.data.certificateCount
+        })
+        // this.$post('home/count/region', {})
+    },
+    mounted () {
+        this.newChart()
+        this.drawMap()
+        // this.initMap()
+    }
+}
+</script>
+<style lang="less" scoped>
+.mapText {
+    &:hover {
+        color: #1890FF;
+    }
+    position: absolute;
+    color: #ffffff;
+    cursor: pointer;
+}
+.ppbox {
+    .ppItem {
+        padding-right: 20px;
+        &:nth-child(6n) {
+            padding-right: 0px;
+        }
+        .ppInner {
+            box-sizing: border-box;
+            position: relative;
+            padding-top: 26px;
+            border-radius: 2px;
+            &.active {
+                border-bottom: 4px solid #4DCB73;
+                box-shadow:0px 5px 12px 4px rgba(0,0,0,0.09),0px 3px 6px 0px rgba(0,0,0,0.12),0px 1px 2px -2px rgba(0,0,0,0.16);
+            }
+            cursor: pointer;
+            background: #ffffff;
+            height: 104px;
+            margin-bottom: 20px;
+            color: #666;
+            text-align: left;
+            padding-left: 8%;
+            .ppText {
+                margin-left: 12px;
+                width: calc(92% - 48px);
+            }
+            .ppText, img {
+                vertical-align: middle;
+            }
+            img {
+                width: 48px;
+            }
+            .p1 {
+                font-size: 16px;
+                font-weight: 600;
+                height: 28px;
+            }
+            .p2 {
+                font-size: 14px;
+                @media screen and (max-width: 1500px) {
+                    font-size: 12px;
+                }
+            }
+            .p3 {
+                margin-top: 10px;
+                color: #999999;
+            }
+        }
+    }
+}
+.bbox {
+    background: #ffffff;
+    height: 500px;
+}
+.bbox1 {
+    border-right: 1px solid #dddddd;
+}
+.home {
+    height: 100%;
+    background: #EDF0F5;
+    .content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        top: 0;
+        .bos-row {
+            position: relative;
+            margin-right: 0;
+            zoom: 1;
+            display: block;
+            box-sizing: border-box;
+            .bos-col-sm {
+                padding: 12px 12px 24px;
+            }
+        }
+    }
+}
+.bos-card {
+    font-family:'微软雅黑', 'Microsoft Yahei', sans-serif;
+    font-size: 14px;
+    font-variant: tabular-nums;
+    line-height: 1.5;
+    color: rgba(0,0,0,.65);
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    // background: #fff;
+    border-radius: 2px;
+    position: relative;
+    transition: all .3s;
+    text-align: left;
+    .card-body {
+        padding: 20px 24px 8px;
+        .chart-card-header {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            .meta {
+                color: rgba(0,0,0,.45);
+                font-size: 14px;
+                line-height: 22px;
+            }
+            .total {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-break: break-all;
+                white-space: nowrap;
+                color: #000;
+                margin-top: 4px;
+                margin-bottom: 0;
+                font-size: 30px;
+                line-height: 38px;
+                height: 38px;
+            }
+        }
+        .chart-card-content {
+            margin-bottom: 12px;
+            position: relative;
+            height: 46px;
+            width: 100%;
+            .content-fix {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                .chart-trend {
+                    margin-right: 16px;
+                    display: inline-block;
+                    font-size: 14px;
+                    line-height: 22px;
+                    .chart-trend-icon {
+                        font-size: 12px;
+                    }
+                    .up {
+                        color: #f5222d;
+                    }
+                    .down {
+                        color: #52c41a;
+                    }
+                }
+            }
+            .icon-prompt-s {
+                width: 10px;
+                height: 10px;
+                margin: 0 5px;
+            }
+        }
+        .chart-card-footer{
+            border-top: 1px solid #e8e8e8;
+            padding-top: 9px;
+            margin-top: 8px;
+        }
+    }
+    .card-body-top {
+        line-height: 33px;
+        padding: 0 10px;
+        border-bottom: 1px solid #E8E8E8;
+        .chart-card-title {
+            font-size: 14px;
+            color: #000;
+        }
+        .chart-card-action {
+            cursor: pointer;
+            position: absolute;
+            top: 0;
+            right: 10px;
+        }
+    }
+    .card-body-con {
+        height: 147px;
+        padding: 0 10px;
+        .noto-li {
+            height: 36px;
+            line-height: 36px;
+            position: relative;
+            cursor: pointer;
+            .noto-text {
+                width: 100%;
+                display: inline-block;
+                color: #323B4E;
+                padding-right: 64px;
+                box-sizing: border-box;
+                word-break:keep-all;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+            .noto-time {
+                position: absolute;
+                right: 0;
+                top: 0;
+                font-size: 12px;
+                color: #8A9CC2;
+            }
+        }
+        .no-notice {
+            text-align: center;
+            padding-top: 50px;
+        }
+    }
+}
+.bos-card {
+    .tabs-bar {
+        padding: 0 20px;
+        border-bottom: 1px solid #E8E8E8;
+        // margin-bottom: 24px;
+        background: #ffffff;
+        .tabs-tit {
+            font-weight: 600;
+            line-height: 1;
+            font-size: 16px;
+            color: rgba(0,0,0,0.65);
+            padding: 11px 0;
+            .tabs-tit-text {
+                cursor: pointer;
+                margin-right: 40px;
+                line-height: 30px;
+            }
+            .label {
+                font-weight: normal;
+                font-size: 14px;
+                margin-left: 24px;
+            }
+        }
+        .extra-wrap {
+            line-height: 50px;
+            display: inline-block;
+            margin-right: 24px;
+            span {
+                margin-left: 24px;
+                color: rgba(0,0,0,0.65);
+                background-color: transparent;
+                text-decoration: none;
+                outline: none;
+                cursor: pointer;
+                transition: color .3s;
+                &.active {
+                    color: #1890FF;
+                }
+            }
+        }
+        .extra-time {
+            width: 280px;
+            display: inline-block;
+        }
+    }
+    .tabs-content {
+        padding: 0 10px;
+        .bos-col-m {
+            float: left;
+            box-sizing: border-box;
+            .title {
+                position: relative;
+                margin-bottom: 10px;
+                h4 {
+                    display: inline-block;
+                    color: #000000;
+                    font-size: 14px;
+                }
+                span {
+                    position: absolute;
+                    right: 0;
+                    color: #8C8C8C;
+                    font-size: 12px;
+                }
+            }
+            .pd30 {
+                padding-left: 30px;
+            }
+            .rank {
+                padding: 0 32px 32px 72px;
+                .list {
+                    margin: 25px 0 0;
+                    overflow: hidden;
+                    padding: 0;
+                    list-style: none;
+                    li {
+                        box-sizing: border-box;
+                        margin-top: 16px;
+                        span:first-child{
+                            background-color: #F0F2F5;
+                            color: rgba(0,0,0,0.65);
+                            border-radius: 20px;
+                            display: inline-block;
+                            font-size: 12px;
+                            font-weight: 600;
+                            margin-right: 24px;
+                            height: 20px;
+                            line-height: 20px;
+                            width: 20px;
+                            text-align: center;
+                        }
+                        span:last-child{
+                            float: right;
+                        }
+                        span {
+                            &.active {
+                                background-color: #1890FF;
+                                color: #fff;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .tabs-footer {
+        padding: 20px;
+        box-sizing: border-box;
+    }
+}
+
+.card-box-wrap {
+    box-sizing: border-box;
+    position: relative;
+    padding: 0 20px;
+    .card-box-prev, .card-box-next {
+        position: absolute;
+        cursor: pointer;
+        line-height: 120px;
+        font-size: 16px;
+        color: #909399;
+        border-radius: 4px;
+        &:hover {
+            background: #d3d3d3;
+        }
+    }
+    .card-box-prev {
+        left: 0;
+    }
+    .card-box-next {
+        right: 0;
+    }
+    .card-box-scroll {
+        overflow: hidden;
+        .card-box-lis {
+            position: relative;
+            transition: transform .3s;
+            float: left;
+            z-index: 2;
+            white-space: nowrap;
+            .card-box-li {
+                display: inline-block;
+                background:#fff;
+                width: 170px;
+                margin: 0 24px;
+                &.active {
+                    border-top: 2px solid #1890FF;
+                    .tit {
+                        color:#1890FF;
+                    }
+                    .cons {
+                        p:last-child {
+                            color: #000000;
+                        }
+                    }
+                }
+                .tit {
+                    line-height: 40px;
+                    padding-left: 16px;
+                    font-size: 16px;
+                    color:rgba(0,0,0,0.65);
+                }
+                .cons {
+                    .li-left {
+                        width: 50%;
+                        padding: 10px 0 15px 16px;
+                        box-sizing: border-box;
+                        color:rgba(0,0,0,0.45);
+                        p:first-child {
+                            font-size: 14px;
+                        }
+                        p:last-child {
+                            font-size: 24px;
+                        }
+                    }
+                    .li-right {
+                        width: 80px;
+                        height: 80px;
+                    }
+                }
+                &:first-child {
+                    margin-left: 0;
+                }
+                &:last-child {
+                    margin-right: 0;
+                }
+            }
+        }
+    }
+}
+@media (min-width: 1200px) {
+    .bos-col-sm {
+        display: block;
+        box-sizing: border-box;
+        width: 25%;
+        float: left;
+        -ms-flex: 0 0 auto;
+        flex: 0 0 auto;
+    }
+    .col-fl {
+        display: block;
+        width: 66%;
+    }
+    .col-fr {
+        display: block;
+        width: 33%;
+    }
+}
+@media (min-width: 768px) and (max-width: 1200px) {
+    .bos-col-sm {
+        display: block;
+        box-sizing: border-box;
+        width: 50%;
+        float: left;
+        -ms-flex: 0 0 auto;
+        flex: 0 0 auto;
+    }
+    .col-fl {
+        display: block;
+        width: 50%;
+    }
+    .col-fr {
+        display: block;
+        width: 50%;
+    }
+}
+</style>
+<style lang="less">
+.home {
+    .el-scrollbar__wrap {
+        height: 264px;
+    }
+    .el-date-editor .el-range__close-icon {
+        position: absolute;
+    }
+    .el-select {
+        width: 160px;
+    }
+    .el-range-editor.el-input__inner {
+        line-height: 1;
+    }
+    .el-range-editor--small .el-range-separator {
+        font-weight: normal;
+    }
+}
+</style>

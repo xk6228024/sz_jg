@@ -1,0 +1,224 @@
+<!-- 未归档车辆查询 -->
+<template>
+    <div class="content-page">
+        <!-- <search v-model="searchValue" :options='searchOptions' permission='sys:notice:find' @search='queryData(1)'></search> -->
+        <div class='wrap'>
+            <el-table
+                v-loading="tableloading"
+                class="custom-table"
+                :data="dataList"
+                :header-cell-style="{'background': '#FAFAFA', 'text-align':'left'}"
+                :cell-style="{'text-align':'left'}"
+                :stripe="false"
+                style="min-height:550px;"
+                row-class-name="table-item"
+                header-row-class-name="table-header-item">
+                <el-table-column
+                    prop="num"
+                    label="序号"
+                    width="80">
+                </el-table-column>
+                <el-table-column
+                    prop="region"
+                    label="地区">
+                </el-table-column>
+                <el-table-column
+                    prop="enterpriseName"
+                    label="企业名称">
+                </el-table-column>
+                <el-table-column
+                    prop="plate"
+                    label="车牌号码">
+                </el-table-column>
+                <el-table-column
+                    prop="plateColor"
+                    label="车牌颜色">
+                </el-table-column>
+            </el-table>
+            <div class="page_box">
+                <el-pagination
+                    :current-page.sync="pageNum"
+                    background
+                    :page-sizes="[10, 15, 20]"
+                    layout="prev, pager, next, sizes,  jumper, total"
+                    :total="total"
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"/>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-business-normal">
+            <!-- <el-button type="primary" @click="addNotice" :disabled="!$checkAuth('vehicle:fix:certificate:export:fixcerts')">新增通知</el-button> -->
+            <!-- <el-button @click="exportExl" :disabled="!$checkAuth('vehicle:fix:certificate:export:fixcerts')">导 出</el-button> -->
+            <el-button @click="$router.push('/enterpriseVehicleQuery')">返 回</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+// import { bussinessCategory, plateColor } from '@/utils/type.js'
+// import { setNum } from '@/utils/utils.js'
+// import { getCookie } from '@/utils/cookie.js'
+import Search from '@/components/search'
+export default {
+    name: 'noFiledVehicle',
+    components: {
+        BreadFoot,
+        Search
+    },
+    data () {
+        return {
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '企业车辆异常预警', path: '查看' }
+            ],
+            searchOptions: [
+                {
+                    label: '所在区域',
+                    type: 'city',
+                    key: 'certificateRegion'
+                },
+                {
+                    label: '企业名称',
+                    type: 'input',
+                    key: 'plate'
+                },
+                {
+                    label: '查询日期',
+                    type: 'date',
+                    key: 'date'
+                }
+            ],
+            searchValue: {},
+            dataList: [
+                {
+                    num: '01',
+                    region: '小店区',
+                    enterpriseName: '群车汇汽车服务有限公司',
+                    plate: '粤B0S62D',
+                    plateColor: '蓝色',
+                    jhwhrq: '2020-06-18',
+                    overdue: '24'
+                },
+                {
+                    num: '02',
+                    region: '小店区',
+                    enterpriseName: '群车汇汽车服务有限公司',
+                    plate: '粤B8F9WQ',
+                    plateColor: '黄色',
+                    jhwhrq: '2020-06-12',
+                    overdue: '29'
+                },
+                {
+                    num: '03',
+                    region: '小店区',
+                    enterpriseName: '群车汇汽车服务有限公司',
+                    plate: '粤BDW511',
+                    plateColor: '蓝色',
+                    jhwhrq: '2020-05-21',
+                    overdue: '59'
+                }
+            ],
+            tableloading: false,
+            total: 3,
+            pageNum: 1,
+            pageSize: 10
+        }
+    },
+    created () {
+        // this.queryData()
+    },
+    mounted () {
+    },
+    filters: {
+    },
+    methods: {
+        exportExl () {
+            // if (!this.$checkAuth('vehicle:fix:certificate:export:fixcerts')) {
+            //     this.$alert('您没有该权限！', '提示')
+            //     return
+            // }
+            // var params = { ...this.searchValue }
+            // if (params.date && params.date.length) {
+            //     params.startTime = params.date[0]
+            //     params.endTime = params.date[1] + 24 * 60 * 60 * 1000 - 1
+            //     delete params.date
+            // } else {
+            //     params.startTime = ''
+            //     params.endTime = ''
+            //     delete params.date
+            // }
+            // var url = `${window.downloadExcelURL}vehicle/fix/certificate/export/fixcerts?`
+            // for (let key in params) {
+            //     url = `${url + key}=${params[key]}&`
+            // }
+            // url = url + `token=${getCookie('token')}`
+            // window.open(url)
+        },
+        queryData (clear) {
+            // if (!this.$checkAuth('vehicle:fix:certificate:pagelist')) {
+            //     this.$alert('您没有该权限！', '提示')
+            //     return
+            // }
+            // if (clear) {
+            //     this.pageNum = 1
+            // }
+            // if (this.searchValue.date && this.searchValue.date.length) {
+            //     this.searchValue.startTime = this.searchValue.date[0]
+            //     this.searchValue.endTime = this.searchValue.date[1] + 24 * 60 * 60 * 1000 - 1
+            // } else {
+            //     this.searchValue.startTime = ''
+            //     this.searchValue.endTime = ''
+            // }
+            // this.tableloading = true
+            // this.$post('/vehicle/fix/certificate/pagelist', {
+            //     pageNum: this.pageNum,
+            //     pageSize: this.pageSize,
+            //     startTime: this.searchValue.startTime,
+            //     endTime: this.searchValue.endTime,
+            //     ...this.searchValue
+            // }).then(res => {
+            //     if (res.status === 200) {
+            //         this.dataList = setNum(res.data, this.pageNum, this.pageSize)
+            //         console.log(this.dataList)
+            //         this.total = res.total
+            //     }
+            //     this.tableloading = false
+            // }).catch(err => {
+            //     this.tableloading = false
+            //     console.log(err)
+            // })
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.queryData()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.queryData()
+        },
+        // 编辑
+        toDetail (id) {
+            if (!this.$checkAuth('vehicle:fix:certificate:findbyent')) {
+                this.$alert('您没有该权限！', '提示')
+                return
+            }
+            this.$router.push(`/synthesizeWorkDetail?id=${id}`)
+        }
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.content-page {
+    .wrap {
+        .table_box {
+            border: 1px solid #dddddd;
+            border-bottom: none;
+        }
+        .page_box {
+            border-top: none;
+        }
+    }
+}
+</style>

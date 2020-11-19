@@ -1,0 +1,540 @@
+<!-- 左侧导航组件 -->
+<script>
+import { setCookie, getCookie } from '../utils/cookie.js'
+export default {
+    name: 'nav-menu',
+    data () {
+        return {
+            logoIcon: require('../assets/images/login-logo-jg.png'),
+            logoIconSmall: require('../assets/images/login-logo-jg.png'),
+            // iconHome: require('../assets/images/icon-home.png'),
+            sortTit: '',
+            sortPy: 'supervision',
+            navList: [
+                {
+                    name: '业务操作',
+                    component: 'businessOper',
+                    icon: 'icon-business-normal',
+                    // icon: require('../assets/images/icon-business-normal.png'),
+                    children: [
+                        {
+                            name: '公告管理',
+                            component: 'notice',
+                            path: '/notice'
+                        },
+                        {
+                            name: '双随机抽查',
+                            component: 'doubleRandom',
+                            path: '/doubleRandom'
+                        },
+                        {
+                            name: '协会网站管理',
+                            children: [
+                                {
+                                    name: '热门服务管理',
+                                    component: 'hotServiceManage',
+                                    path: '/hotServiceManage'
+                                },
+                                {
+                                    name: '新闻管理',
+                                    component: 'newsManage',
+                                    path: '/newsManage'
+                                },
+                                {
+                                    name: '协会管理',
+                                    component: 'societyManager',
+                                    path: '/societyManager'
+                                },
+                                {
+                                    name: '链接管理',
+                                    component: 'linkType',
+                                    path: '/linkType'
+                                },
+                                {
+                                    name: '广告管理',
+                                    component: 'advertisement',
+                                    path: '/advertisement'
+                                }
+                            ]
+                        },
+                        {
+                            name: '企业备案审核',
+                            component: 'recordAuth',
+                            path: '/recordAuth'
+                        },
+                        {
+                            name: '企业诚信参评',
+                            component: 'creditEva',
+                            path: '/creditEva'
+                        },
+                        {
+                            name: '合格证管理',
+                            component: 'certificateManage',
+                            path: '/certificateManage'
+                        },
+                        {
+                            name: '服务投诉处理',
+                            component: 'complainApply',
+                            path: '/complainApply'
+                        }
+                    ]
+                },
+                {
+                    name: '档案管理',
+                    component: 'countAnalyze',
+                    icon: 'icon-archives-normal',
+                    // icon: require('../assets/images/icon-analy.png'),
+                    children: [
+                        {
+                            name: '维修企业档案',
+                            component: 'companyArchw',
+                            path: '/companyArchw'
+                        },
+                        {
+                            name: '检测企业档案',
+                            component: 'companyArchj',
+                            path: '/companyArchj'
+                        },
+                        {
+                            name: '运输企业档案',
+                            component: 'companyArchy',
+                            path: '/companyArchy'
+                        },
+                        // {
+                        //     name: '营运车辆技术档案',
+                        //     component: 'transportArch',
+                        //     path: '/transportArch2'
+                        // },
+                        {
+                            name: '电子健康档案',
+                            component: 'electronicHealth',
+                            path: '/electronicHealth'
+                        },
+                        {
+                            name: '从业人员档案',
+                            component: 'employeesArch',
+                            path: '/employeesArch'
+                        },
+                        // {
+                        //     name: '从业人员健康数据填报',
+                        //     component: 'employeesHealthFillIn',
+                        //     path: '/employeesHealthFillIn'
+                        // },
+                        // {
+                        //     name: '合格证发放记录',
+                        //     component: 'maintenanceCertificate',
+                        //     path: '/maintenanceCertificate'
+                        // },
+                        // {
+                        //     name: '现场勘验',
+                        //     component: 'inquestInfo',
+                        //     path: '/inquestInfo'
+                        // }，
+                        {
+                            name: '企业备案信息',
+                            component: 'recordInformation',
+                            path: '/recordInformation'
+                        },
+                        {
+                            name: '一车一档',
+                            component: 'dataArchiving',
+                            path: '/dataArchiving'
+                        }
+                    ]
+                },
+                {
+                    name: '查询统计',
+                    component: 'countAnalyze',
+                    icon: 'icon-analy-normal',
+                    // icon: require('../assets/images/icon-analy.png'),
+                    children: [
+                        {
+                            name: '运输车辆维护业务统计',
+                            component: 'transportVehicleBusiness',
+                            path: '/transportVehicleBusiness'
+                        },
+                        {
+                            name: '健康档案数据上传统计',
+                            component: 'companyData',
+                            path: '/companyData'
+                        },
+                        {
+                            name: '维护作业查询',
+                            component: 'maintenanceWork',
+                            path: '/maintenanceWork'
+                        },
+                        // {
+                        //     name: '从业人员复工统计',
+                        //     component: 'employeesStatistics',
+                        //     path: '/employeesStatistics'
+                        // },
+                        // {
+                        //     name: '环保检测报告查询',
+                        //     component: 'environmentTesting',
+                        //     path: '/environmentTesting'
+                        // },
+                        {
+                            name: '检测作业查询',
+                            component: 'synthesizeWork',
+                            path: '/synthesizeWork'
+                        },
+                        {
+                            name: '服务评价查询',
+                            component: 'complainManage',
+                            path: '/complainManage'
+                        },
+                        {
+                            name: '合格证备案统计',
+                            component: 'certificateFiling',
+                            path: '/certificateFiling'
+                        },
+                        {
+                            name: '维护计划查询统计',
+                            component: 'maintainPlanQuery',
+                            path: '/maintainPlanQuery'
+                        },
+                        {
+                            name: '异地检测作业查询',
+                            component: 'distantDetectionRecords',
+                            path: '/distantDetectionRecords'
+                        }
+                    ]
+                },
+                {
+                    name: '系统管理',
+                    component: 'sysSet',
+                    icon: 'icon-setting-normal',
+                    // iconClass: require('../assets/images/icon-business.png'),
+                    children: [
+                        {
+                            name: '权限管理',
+                            component: 'permissionEva',
+                            path: '/permissionEva'
+                        }
+                        // {
+                        //     name: '发证机关管理',
+                        //     component: 'certificateOffice',
+                        //     path: '/certificateOffice'
+                        // },
+                        // {
+                        //     name: '日志管理',
+                        //     component: 'logEva',
+                        //     path: '/logEva'
+                        // }
+                    ]
+                }
+            ],
+            menuActive: 'home'
+        }
+    },
+    // <div class={ this.$store.state.sidebarFold ? 'nav-logo nav-logo--fold' : 'nav-logo' }>
+    //     { this.$store.state.sidebarFold ? <img class="logo-icon-fold fl" src={this.logoIconSmall}/>
+    //         : <img class="logo-icon fl" src={this.logoIcon} />}
+    //     { this.$store.state.sidebarFold ? '' : <div class="logo-icon-tit"><h6 class="icon-tit-p1 hidde-txt">{this.sortTit}监管</h6><div class="icon-tit-p2 hidde-txt">{this.sortPy} supervision</div></div>}
+    // </div>
+    render () {
+        return (
+            <div class={ this.$store.state.sidebarFold ? 'nav-menu nav-menu--fold' : 'nav-menu' }>
+                <el-menu default-active={ this.$store.state.activeTab }
+                    unique-opened={ true }
+                    class="el-menu-vertical-demo"
+                    collapse={ this.$store.state.sidebarFold }>
+                    <el-menu-item index="home" onClick={ this.routerLinkTo.bind(this, '/home') }>
+                        <i class={ this.$store.state.sidebarFold ? 'icon-menu icon-home-normal' + ' icon-menu--fold' : 'icon-menu icon-home-normal'}></i>
+                        <span slot="title">首页</span>
+                    </el-menu-item>
+                    {this.navList.map((item, index) => {
+                        return (
+                            <el-submenu
+                                index={ item.name }
+                                key={ item.name }>
+                                <template slot="title">
+                                    <i class={ this.$store.state.sidebarFold ? 'icon-menu ' + item.icon + ' icon-menu--fold' : 'icon-menu ' + item.icon }></i>
+                                    <span>{ item.name }</span>
+                                </template>
+                                {item.children.map((chil, chilIndex) => {
+                                    return (
+                                        <div>
+                                            {(chil.children && chil.name === '协会网站管理')
+                                                ? <el-submenu index={ `${index}-${chilIndex}` } class="sub-menu">
+                                                    <template slot="title">{ chil.name }</template>
+                                                    {chil.children.map((sub, subIndex) => {
+                                                        return (
+                                                            <el-menu-item index={ `${index}-${chilIndex}-${subIndex}` } onClick={ this.routerLinkTo.bind(this, sub.path)}>
+                                                                { sub.name }
+                                                            </el-menu-item>
+                                                        )
+                                                    })}
+                                                </el-submenu>
+                                                : <el-menu-item
+                                                    onClick={ this.routerLinkTo.bind(this, chil.path) }
+                                                    key={ chil.name }
+                                                    index={ `${index}-${chilIndex}` }>
+                                                    { chil.name }
+                                                </el-menu-item>}
+                                        </div>
+                                    )
+                                })}
+                            </el-submenu>
+                        )
+                    })}
+                </el-menu>
+            </div>
+        )
+    },
+    created () {
+        // <i class="icon-menu icon-home-normal"></i>
+        // <i class={'icon-menu ' + item.icon }></i>
+        // 获取公共参数
+        if (getCookie('sortTitle')) {
+            let sortTitle = JSON.parse(getCookie('sortTitle'))
+            this.sortTit = sortTitle.sortTit
+            this.sortPy = sortTitle.sortPy
+        }
+        // this.getRegion()
+        // this.getLoginMenun() // <i class={'icon-menu ' + item.iconClass}></i>
+    },
+    mounted () {
+    },
+    methods: {
+        // 获取区域列表
+        getRegion () {
+            this.$post('drownList/regionList', {})
+                .then(res => {
+                    if (res.code === 0) {
+                        // this.regionData = res.data
+                        let arr = []
+                        res.data.forEach(i => {
+                            if (i.level === 1) {
+                                i.children = []
+                                arr.push(i)
+                            }
+                        })
+                        res.data.forEach(i => {
+                            arr.forEach(j => {
+                                if (i.level === 2 & i.pid === j.id) {
+                                    i.children = []
+                                    j.children.push(i)
+                                }
+                            })
+                        })
+                        res.data.forEach(i => {
+                            arr.forEach(j => {
+                                j.children.forEach(q => {
+                                    if (i.level === 3 & i.pid === q.id) {
+                                        q.children.push(i)
+                                    }
+                                })
+                            })
+                        })
+                        this.$store.commit('setRegionList', arr)
+                        setCookie('regionList', JSON.stringify(arr))
+                    }
+                })
+        },
+        // 路由跳转
+        routerLinkTo (path) {
+            this.$router.push(path)
+        },
+        // 获取权限菜单
+        getLoginMenun () {
+            this.$post('sys/menus/loginMenu', {})
+                .then(res => {
+                    if (res.status === 200) {
+                        if (!res.data || !res.data.length) {
+                            this.$router.push('/login')
+                        }
+                        this.navList = res.data
+                        sessionStorage.authList = JSON.stringify(res.data)
+                    }
+                })
+        }
+    }
+}
+</script>
+
+<style lang='less' scoped>
+.icon-nav {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+}
+.nav-menu {
+    background: #00488D;
+    width: 256px;
+    height: calc(100% - 60px);
+    overflow: auto;
+    position: absolute;
+    left: 0px;
+    top: 60px;
+    bottom: 0;
+    transition: display .6s, left .6s, width .6s, margin .6s, font-size .6s;
+    border-right: 1px solid #E8ECEF;
+    @media screen and(max-width: 1400px) {
+        width: 240px;
+    }
+    .nav-logo {
+        background: #00488D;
+        height: 60px;
+        box-sizing: border-box;
+        padding: 8px 15px 8px 25px;
+        margin-bottom: 2px;
+        box-shadow: 0px 2px 4px 0px #003466;
+        overflow: hidden;
+        .logo-icon {
+            width: 39px;
+            height: 48px;
+            margin-right: 4px;
+        }
+        .logo-icon-tit {
+            padding-left:40px;
+            padding-right: 20px;
+            color: #ffffff;
+            text-align: left;
+            .icon-tit-p1 {
+                font-size: 20px;
+            }
+            .icon-tit-p2 {
+                font-size: 8px;
+            }
+        }
+        .logo-icon-fold {
+            margin-top: 2px;
+            width: 34px;
+            height: 40px;
+        }
+        .logo-text {
+            height: 44px;
+            line-height: 44px;
+            font-size: 22px;
+            color: #FFFFFF;
+        }
+    }
+    .nav-logo--fold {
+        padding: 10px 15px;
+    }
+    .icon-menu {
+        display: inline-block;
+        height: 16px;
+        width: 16px;
+        margin-left: 10px;
+        margin-right: 20px;
+        &.icon-home-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-home-normal.png');
+        }
+        &.icon-business-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-business-normal.png');
+        }
+        &.icon-analy-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-analy-normal.png');
+        }
+        &.icon-archives-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-archives-normal.png');
+        }
+        &.icon-setting-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-setting-normal.png');
+        }
+    }
+    .icon-menu--fold {
+        margin-left: 5px;
+    }
+    .is-active {
+        .icon-home-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-home-selected.png');
+        }
+        .icon-business-normal  {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-business-selected.png');
+        }
+        .icon-analy-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-analy-selected.png');
+        }
+        .icon-archives-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-archives-selected.png');
+        }
+        .icon-setting-normal {
+            background-size: 100% 100%;
+            background-image: url('../assets/images/icon-setting-selected.png');
+        }
+    }
+    .menu-title {
+        font-size: 18px;
+        color: #778CA2;
+        text-align: center;
+        height: 50px;
+        line-height: 50px;
+        margin-top: 16px;
+    }
+}
+.nav-menu--fold {
+    width:64px;
+}
+</style>
+<style lang="less">
+.nav-menu {
+    .icon-menu {
+        color: #ffffff;
+    }
+    .el-menu {
+        border-right: none;
+        background: #002E62;
+        transition: 0s;
+    }
+    .el-menu .el-menu-item, .el-menu .el-submenu {
+        color: #8A9CC2;
+        text-align: left;
+        background: #00488D;
+    }
+    .el-menu .el-menu-item {
+        background: #00488D;
+    }
+    .el-menu-item-group__title {
+        padding: 0;
+    }
+    .el-submenu .el-menu-item {
+        background: #00274C;
+        color: #8A9CC2;
+        padding-left: 70px !important;
+        box-shadow:0px -1px 0px 0px rgba(0,72,141,1);
+    }
+    .el-submenu.is-active .el-submenu__title {
+        background: #003A73;
+        color: #FFFFFF;
+    }
+    .el-menu .el-menu-item.is-active, .el-menu .el-menu-item:hover,.el-menu .el-submenu__title:focus {
+        background: #003A73;
+        color: #ffffff;
+    }
+    .el-menu .el-submenu .el-submenu__title:hover, .el-menu .el-submenu .el-submenu__title:focus {
+        background: #003A73;
+        color: #ffffff;
+    }
+    .el-menu .el-submenu .el-menu .el-menu-item.is-active, .el-submenu .el-menu-item:hover, .el-submenu .el-menu-item:focus{
+        background: #EF8B1B;
+        color: #ffffff;
+    }
+    .el-submenu__title {
+        color: #8A9CC2;
+    }
+    .sub-menu {
+        .el-submenu__title {
+            background: #00274c !important;
+            padding-left: 70px !important;
+            color: #fff;
+        }
+        .el-menu {
+            .el-menu-item {
+                padding-left: 86px !important;
+            }
+        }
+    }
+}
+</style>

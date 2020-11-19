@@ -1,0 +1,217 @@
+<template>
+    <div class="search-template">
+        <el-form class="form clearfix" ref="form" :model="value" :inline-message='false' :label-width='labelLength' :inline='true'>
+            <el-col :span="8" v-for="(item, index) in listOptions" :key="index">
+                <el-form-item  :label="`${item.label}：`" :prop="item.key">
+                    <el-input v-if="item.type === 'input'" v-model="value[item.key]" clearable placeholder="请输入"></el-input>
+                    <el-select v-else-if="item.type === 'select' && item.list" v-model="value[item.key]" placeholder="请选择" clearable>
+                        <el-option
+                        v-for="child in item.list"
+                        :key="child[item.list_value] || child.value"
+                        :label="child[item.list_key] || child.label"
+                        :value="child[item.list_value] || child.value" >
+                        </el-option>
+                    </el-select>
+                    <el-select v-else-if="item.type === 'city'" v-model="value[item.key]" placeholder="请选择" clearable>
+                        <el-option
+                        v-for="child in regionList"
+                        :key="child.regionId"
+                        :label="child.regionName"
+                        :value="child.regionId" >
+                        </el-option>
+                    </el-select>
+                    <el-date-picker
+                        v-else-if="item.type === 'date'"
+                        v-model="value[item.key]"
+                        type="daterange"
+                        align="right"
+                        unlink-panels
+                        range-separator="至"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        :value-format="item.valueFormat || 'timestamp'"
+                        >
+                    </el-date-picker>
+                    <el-date-picker
+                        v-else-if="item.type === 'year'"
+                        v-model="value[item.key]"
+                        :clearable=false
+                        :editable=false
+                        type="year"
+                        placeholder="请选择"
+                        :value-format="item.valueFormat || 'yyyy'">
+                    </el-date-picker>
+                </el-form-item>
+            </el-col>
+            <el-col :span="8" class="btns clearfix">
+                <el-button type="primary" :disabled="getDisabled" @click="query">查&nbsp;询</el-button>
+                <el-button @click="reset">重&nbsp;置</el-button>
+                <el-button type="text" v-if="listOptions.length > 2 && options.length > 2" @click="listOptions = listOptions.slice(0, 2)">收起 <i class="el-icon-arrow-up"></i></el-button>
+                <el-button type="text" v-if="listOptions.length <= 2 && options.length > 2" @click="listOptions = options">展开 <i class="el-icon-arrow-down"></i></el-button>
+            </el-col>
+        </el-form>
+    </div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+export default {
+    name: 'searchTemplate',
+    props: {
+        /**
+         * list: 指定集合
+         * list_key: 指定key值 默认label
+         * list_value: 指定value 默认value
+         * defaultValue: 设置默认值
+         * valueFormat: 设置el-date-picker的格式化样式
+         */
+        options: {
+            type: Array,
+            required: true,
+            default: () => {
+                return []
+            }
+        },
+        value: {
+            type: Object
+        },
+        permission: {
+            type: String,
+            default: () => {
+                return ''
+            }
+        }
+    },
+    data () {
+        return {
+            listOptions: [],
+            labelLength: '0px'
+        }
+    },
+    watch: {
+        options: {
+            handler: function (val) {
+                if (val) {
+                    var vals = JSON.parse(JSON.stringify(this.value))
+                    let length = 0
+                    val.forEach(element => {
+                        if (length < element.label.length) {
+                            length = element.label.length
+                        }
+                        if (element.defaultValue) {
+                            vals[element.key] = element.defaultValue
+                        } else {
+                            vals[element.key] = ''
+                        }
+                    })
+                    this.labelLength = ((length + 1) * 14 + 5) + 'px'
+                    this.$emit('input', vals)
+                    this.listOptions = val
+                    // 默认收起
+                    this.listOptions = this.listOptions.slice(0, 2)
+                }
+            },
+            immediate: true
+        },
+        listOptions: {
+            handler: function (val) {
+                this.$nextTick(() => {
+                    let content = document.querySelectorAll('.el-form-item__content')
+                    content = Array.prototype.slice.call(content) // 兼容ie
+                    content.forEach(c => {
+                        c.style.width = 'calc(100% - ' + this.labelLength + ')'
+                    })
+                })
+            },
+            immediate: true
+        }
+    },
+    computed: {
+        ...mapGetters(['regionList']),
+        getDisabled () {
+            if (this.permission === '') {
+                return false
+            } else {
+                return !this.$checkAuth(this.permission)
+            }
+        }
+    },
+    methods: {
+        query () {
+            this.$emit('search', this.value)
+        },
+        reset () {
+            this.options.forEach(element => {
+                if (element.defaultValue && this.value[element.key]) {
+                    this.value[element.key] = element.defaultValue
+                } else {
+                    this.value[element.key] = ''
+                }
+            })
+            this.$emit('input', this.value)
+        }
+    }
+}
+</script>
+
+<style lang="less">
+.search-template {
+    .el-form {
+        .el-col {
+            height: 56px;
+            box-sizing: border-box;
+            &:nth-child(3n + 1) {
+                padding-right: 4%;
+                .el-form-item {
+                    text-align: left;
+                }
+            }
+            &:nth-child(3n - 1) {
+                padding: 0 2%;
+                .el-form-item {
+                    text-align: center;
+                }
+            }
+            &:nth-child(3n) {
+                padding-left: 4%;
+                .el-form-item {
+                    text-align: right;
+                }
+            }
+            .el-form-item {
+                width: 100%;
+                margin-bottom: 16px;
+                .el-form-item__label {
+                    box-sizing: border-box;
+                    padding-right: 5px;
+                    text-align: right;
+                    // text-align: justify;
+                    // text-align-last: justify;
+                }
+                .el-form-item__content{
+                    .el-input__inner {
+                        width: 100%;
+                        height: 34px;
+                        line-height: 34px;
+                    }
+                    .el-select {
+                        width: 100%;
+                    }
+                    .el-date-editor {
+                        width: 100%;
+                        margin-top: 3px;
+                        .el-input__icon, .el-range-separator {
+                            line-height: 32px;
+                        }
+                    }
+                }
+            }
+        }
+        .btns {
+            box-sizing: border-box;
+            text-align: left !important;
+            margin-top: 4px;
+        }
+    }
+}
+</style>

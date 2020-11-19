@@ -1,0 +1,173 @@
+<template>
+    <div id="certificateFilingTable">
+        <div class="content">
+            <tool-bar>
+                <div class="fl">
+                    <label>所属区域</label>
+                    <el-select v-model="searchRegion" placeholder="请选择" class="tool_ipt">
+                        <el-option
+                        v-for="item in regionList"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                        </el-option>
+                    </el-select>
+                    <label>企业名称</label>
+                    <el-input class="tool_ipt" v-model="searchName" placeholder="请输入内容"></el-input>
+                    <label>上传日期</label>
+                    <el-input class="tool_ipt" v-model="searchData" placeholder="请输入内容"></el-input>
+                </div>
+                <div class="fr">
+                    <el-button class="query_btn slects_btn">查询</el-button>
+                    <el-button class="react_btn">重置</el-button>
+                </div>
+            </tool-bar>
+            <div class='wrap'>
+                <div class="table_box">
+                    <el-table
+                        :data="dataList"
+                        height="550"
+                        :header-cell-style="{'text-align':'center'}"
+                        :cell-style="{'text-align':'center'}"
+                        :stripe="false"
+                        style="width: 100%">
+                    <el-table-column
+                        prop="num"
+                        label="序号"
+                        width="50px"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="region"
+                        label="区域"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="name"
+                        label="企业名称"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="addr"
+                        label="经营地址"
+                        >
+                    </el-table-column>
+                    <el-table-column
+                        prop="total"
+                        label="备案数量"
+                        >
+                    </el-table-column>
+                  </el-table>
+                </div>
+                <div class="page_box">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="pageNum"
+                        :page-sizes="[10, 15, 20, 25]"
+                        :page-size="pageSize"
+                        background
+                        layout="prev, pager, next, sizes,  jumper, total"
+                        :total="total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-setting-normal">
+            <el-button>导出</el-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+import toolBar from '@/components/ToolBar.vue'
+export default {
+    name: 'certificateFilingTable',
+    data () {
+        return {
+            searchRegion: '',
+            searchName: '',
+            searchData: '',
+            dataList: [
+                {
+                    num: 1,
+                    region: '端州区',
+                    name: '肇庆市盛德龙汽车运输服务有限公司',
+                    addr: '肇庆市端州区黄岗街道信安大道97号',
+                    total: '1250'
+                },
+                {
+                    num: 2,
+                    region: '端州区',
+                    name: '肇庆市盛德龙汽车运输服务有限公司',
+                    addr: '肇庆市端州区黄岗街道信安大道97号',
+                    total: '2478'
+                },
+                {
+                    num: 3,
+                    region: '鼎湖区',
+                    name: '肇庆市万顺汽车运输服务有限公司',
+                    addr: '肇庆市鼎湖区桂城管理区平安西街4号',
+                    total: '9852'
+                },
+                {
+                    num: 4,
+                    region: '鼎湖区',
+                    name: '肇庆市万顺汽车运输服务有限公司',
+                    addr: '肇庆市鼎湖区桂城管理区平安西街4号',
+                    total: '1003'
+                }
+            ],
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '合格证备案统计', path: '' }
+            ],
+            regionList: [
+                {
+                    value: 2,
+                    label: '端州区'
+                },
+                {
+                    value: 3,
+                    label: '鼎湖区'
+                },
+                {
+                    value: 4,
+                    label: '高要区'
+                },
+                {
+                    value: 5,
+                    label: '广宁县'
+                },
+                {
+                    value: 6,
+                    label: '德庆县'
+                },
+                {
+                    value: 7,
+                    label: '封开县'
+                },
+                {
+                    value: 8,
+                    label: '怀集县'
+                },
+                {
+                    value: 9,
+                    label: '四会市'
+                }
+            ],
+            total: 4,
+            pageNum: 1,
+            pageSize: 10
+        }
+    },
+    components: {
+        BreadFoot,
+        toolBar
+    },
+    methods: {
+        handleSizeChange () {},
+        handleCurrentChange () {}
+    }
+}
+</script>

@@ -1,0 +1,341 @@
+<template>
+    <div id="maintenanceCertificate">
+        <div class="content">
+            <search :options='searchOptions' v-model="searchValue" @search='searchData'></search>
+            <custom-table
+                :table-data="tabelData"
+                :label-data="labelData"
+                :total="total"
+                height="630"
+                :currentPage='pageNum'
+                :loading="loading"
+                @onPageChange="handleCurrentChange"
+                @onSizeChange="handleSizeChange"
+                >
+                <template slot="operation">
+                    <el-button type="text" size="small" @click="dialogVisible=true">发放合格证</el-button>
+                    <el-button type="text" size="small" @click="recordDialog = true">发放记录</el-button>
+                </template>
+            </custom-table>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-archives-normal">
+            <el-button type="primary">导 出</el-button>
+        </bread-foot>
+        <el-dialog
+            title="发放合格证"
+            :visible.sync="dialogVisible"
+            :close-on-click-modal="false"
+            @closed="closeDialog"
+            top="30vh"
+            width="30%">
+            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="ruleForm">
+                <el-form-item label="开始编号" prop="start">
+                    <el-input v-model.number="ruleForm.start" maxlength="16"></el-input>
+                </el-form-item>
+                <el-form-item label="结束编号" prop="end">
+                    <el-input v-model.number="ruleForm.end" maxlength="16"></el-input>
+                </el-form-item>
+                <el-form-item label="申领份数" prop="total">
+                    <el-input disabled :value="certificateTotal"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+            </span>
+        </el-dialog>
+        <el-dialog
+            title="合格证发放记录"
+            :visible.sync="recordDialog"
+            :close-on-click-modal="false"
+            top="30vh"
+            width="1000px">
+            <div>
+                <label>发放年度：</label>
+                <el-date-picker
+                    v-model="recordYear"
+                    type="year"
+                    placeholder="选择年">
+                </el-date-picker>
+            </div>
+            <el-table
+                :header-cell-style="{'background': '#FAFAFA', 'text-align':'left'}"
+                :cell-style="{'text-align':'left'}"
+                :stripe="false"
+                row-class-name="table-item"
+                header-row-class-name="table-header-item"
+                :data="recordData"
+                style="width: 100%;margin-top: 24px;">
+                <el-table-column
+                    prop="num"
+                    label="序号"
+                    width="50">
+                </el-table-column>
+                <el-table-column
+                    prop="start"
+                    label="开始编号"
+                    width="180">
+                </el-table-column>
+                <el-table-column
+                    prop="end"
+                    label="结束编号"
+                    width="180">
+                </el-table-column>
+                <el-table-column
+                    prop="total"
+                    label="发放数量">
+                </el-table-column>
+                <el-table-column
+                    prop="used"
+                    label="已使用">
+                </el-table-column>
+                <el-table-column
+                    prop="notused"
+                    label="未使用数量">
+                </el-table-column>
+                <el-table-column
+                    prop="person"
+                    label="操作人">
+                </el-table-column>
+                <el-table-column
+                    prop="time"
+                    label="发放时间"
+                    width="200">
+                </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="recordDialog = false">取 消</el-button>
+                <el-button type="primary" @click="recordDialog = false">确 定</el-button>
+            </span>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+import customTable from '@/components/table'
+import search from '@/components/search'
+export default {
+    name: 'inquestInfo',
+    components: {
+        BreadFoot,
+        customTable,
+        search
+    },
+    data () {
+        return {
+            dialogVisible: false,
+            recordDialog: false,
+            recordYear: '',
+            recordData: [
+                {
+                    num: 1,
+                    start: '4403032020000000',
+                    end: '4403032002001000',
+                    total: '1000',
+                    used: '566',
+                    notused: '434',
+                    person: '黄鹤',
+                    time: '2020-03-23 17:14:37'
+                },
+                {
+                    num: 2,
+                    start: '4403062020000500',
+                    end: '4403062002001000',
+                    total: '500',
+                    used: '125',
+                    notused: '375',
+                    person: '傅波',
+                    time: '2020-02-23 09:14:37'
+                }
+            ],
+            breadArr: [
+                { title: '档案管理', path: '' }, { title: '合格证发放记录', path: '' }
+            ],
+            searchOptions: [
+                {
+                    label: '所在区域',
+                    type: 'select',
+                    key: 'region',
+                    list: [
+                        { label: '福田区', value: '1' },
+                        { label: '罗湖区', value: '2' },
+                        { label: '南山区', value: '3' },
+                        { label: '宝安区', value: '4' },
+                        { label: '盐田区', value: '5' },
+                        { label: '龙华区', value: '6' },
+                        { label: '龙岗区', value: '7' },
+                        { label: '大鹏新区', value: '8' },
+                        { label: '光明新区', value: '9' }
+                    ]
+                },
+                {
+                    label: '经营类别',
+                    type: 'select',
+                    key: 'type',
+                    list: [
+                        { label: '一类机动车维修', value: '1' },
+                        { label: '二类机动车维修', value: '2' },
+                        { label: '三类机动车维修', value: '3' },
+                        { label: '一类摩托车维修', value: '4' },
+                        { label: '二类摩托车维修', value: '5' },
+                        { label: '危险货物运输车辆维修', value: '6' }
+                    ]
+                },
+                {
+                    label: '发放日期',
+                    type: 'input',
+                    key: 'daterange'
+                },
+                {
+                    label: '企业名称',
+                    type: 'input',
+                    key: 'enterpriseName'
+                },
+                {
+                    label: '合格证编号',
+                    type: 'input',
+                    key: 'code'
+                }
+            ],
+            searchValue: {},
+            loading: false,
+            tabelData: [
+                {
+                    num: 1,
+                    enterpriseName: '深圳市万顺源汽车维修厂',
+                    enterpriseType: '一类维修',
+                    total: '922',
+                    used: '132',
+                    notUsed: '790'
+                },
+                {
+                    num: 2,
+                    enterpriseName: '南宁市群保汽车维修有限公司',
+                    enterpriseType: '二类维修',
+                    total: '200',
+                    used: '80',
+                    notUsed: '120'
+                },
+                {
+                    num: 3,
+                    enterpriseName: '南宁市良安汽车修理厂',
+                    enterpriseType: '二类维修',
+                    total: '500',
+                    used: '322',
+                    notUsed: '188'
+                },
+                {
+                    num: 4,
+                    enterpriseName: '广西长顺汽车维修有限公司',
+                    enterpriseType: '一类维修',
+                    total: '400',
+                    used: '256',
+                    notUsed: '144'
+                }
+            ],
+            labelData: [
+                {
+                    label: '序号',
+                    prop: 'num',
+                    width: 80
+                },
+                {
+                    label: '维修企业名称',
+                    prop: 'enterpriseName'
+                },
+                {
+                    label: '经营类别',
+                    prop: 'enterpriseType'
+                },
+                {
+                    label: '累计发放数量',
+                    prop: 'total'
+                },
+                {
+                    label: '累计使用数量',
+                    prop: 'used'
+                },
+                {
+                    label: '累计未使用数量',
+                    prop: 'notUsed'
+                },
+                {
+                    label: '操作',
+                    slotName: 'operation',
+                    width: 200
+                }
+            ],
+            rules: {
+                start: [
+                    { required: true, message: '请输入开始编号', trigger: 'change' },
+                    { type: 'number', message: '编号必须为数字值' }
+                ],
+                end: [
+                    { required: true, message: '请输入结束编号', trigger: 'change' },
+                    { type: 'number', message: '编号必须为数字值' }
+                ]
+            },
+            ruleForm: {
+                start: '',
+                end: ''
+            },
+            total: 4,
+            pageNum: 1,
+            pageSize: 10
+        }
+    },
+    computed: {
+        certificateTotal () {
+            if (isNaN(this.ruleForm.start) || isNaN(this.ruleForm.end)) {
+                return ''
+            }
+            if (!this.ruleForm.start || !this.ruleForm.end) {
+                return ''
+            }
+            var start = this.ruleForm.start - 0
+            var end = this.ruleForm.end - 0
+            if ((end - start) < 0) {
+                return '结束编号不能小于开始编号'
+            }
+            return end - start
+        }
+    },
+    created () {
+        this.searchData()
+    },
+    methods: {
+        searchData () {
+        },
+        handleSizeChange (val) {
+            this.pageSize = val
+            this.pageNum = 1
+            this.searchData()
+        },
+        handleCurrentChange (val) {
+            this.pageNum = val
+            this.searchData()
+        },
+        closeDialog () {
+            this.dialogVisible = false
+            this.$refs.ruleForm.resetFields()
+        },
+        downloadTable () {
+        }
+    }
+}
+</script>
+
+<style lang="less">
+#maintenanceCertificate {
+    background: #ffffff;
+    min-height: 750px;
+    .content {
+        padding: 20px 30px 80px;
+    }
+    .el-input__inner {
+        height: 32px;
+        line-height: 32px;
+    }
+}
+</style>

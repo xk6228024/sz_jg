@@ -1,0 +1,297 @@
+<!-- 档案详情 -->
+<template>
+    <div class="distantDetectionRecordDetail">
+        <div class="content">
+            <div class="table_box">
+                <h3>车辆信息</h3>
+                <table class="table" style="width:900px;">
+                    <tr>
+                        <td width="140">车牌号码：</td>
+                        <td>{{infoObj.vehicleno}}</td>
+                        <td width="140">车牌颜色：</td>
+                        <td v-if="!infoObj.type">{{infoObj.platecolor|filterCommon(plateColor)}}</td>
+                        <td v-else>{{infoObj.plateColor}}</td>
+                    </tr>
+                    <tr>
+                        <td>车辆类别：</td>
+                        <td>{{infoObj.vehicletype || infoObj.vehicleType}}</td>
+                        <td>车主名称：</td>
+                        <td>{{infoObj.client}}</td>
+                    </tr>
+                    <tr>
+                        <td>检测机构编号：</td>
+                        <td v-if="!infoObj.type">{{infoObj.dsid}}</td>
+                        <td v-else>{{infoObj.dsId}}</td>
+                        <td>检测机构名称：</td>
+                        <td>{{infoObj.dsname}}</td>
+                    </tr>
+                    <tr>
+                        <td>检测报告编号：</td>
+                        <td>{{infoObj.detectsn}}</td>
+                        <td>检测日期：</td>
+                        <!-- <td>{{infoObj.registdate | formatTimeS}}</td> -->
+                        <td v-if="!infoObj.type">{{infoObj.detectdate|formatTimeS}}</td>
+                        <td v-else>{{infoObj.detectDate}}</td>
+                    </tr>
+                    <tr>
+                        <td>检测类别：</td>
+                        <td v-if="!infoObj.type">{{infoObj.detecttype | detecttypeFilter}}</td>
+                        <td v-else>{{infoObj.detectType}}</td>
+                        <td>检测结论：</td>
+                        <td>{{detectResult}}</td>
+                    </tr>
+                    <tr>
+                        <td>下次评定日期：</td>
+                        <td>{{(infoObj.nextTime || infoObj.nextDate) | formatTimeS}}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="table_box">
+                <h3>检测作业信息</h3>
+                <div class="img_box">
+                    <div class="item">
+                        <img v-if="breakingPicture" :src="breakingPicture" @click="$lookImg(breakingPicture)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>制动工位照片</p>
+                    </div>
+                    <div class="item">
+                        <img v-if="lightPicture" :src="lightPicture" @click="$lookImg(lightPicture)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>灯光工位照片</p>
+                    </div>
+                    <div class="item">
+                        <img v-if="powerPicture" :src="powerPicture" @click="$lookImg(powerPicture)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>动力性工位照片</p>
+                    </div>
+                    <div class="item">
+                        <img v-if="drivingCertificate" :src="drivingCertificate" @click="$lookImg(drivingCertificate)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>行驶证照片</p>
+                    </div>
+                </div>
+                <div class="img_box">
+                    <div class="item">
+                        <img v-if="securityReportForm" :src="securityReportForm" @click="$lookImg(securityReportForm)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>安检报告照片</p>
+                    </div>
+                    <div class="item">
+                        <img v-if="securityAuditMark" :src="securityAuditMark" @click="$lookImg(securityAuditMark)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>安检合格标致照片</p>
+                    </div>
+                    <div class="item">
+                        <img v-if="carriageCard2" :src="carriageCard2" @click="$lookImg(carriageCard2)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>道路运输证照片</p>
+                    </div>
+                    <div class="item">
+                        <img v-if="allIinspectionReport" :src="allIinspectionReport" @click="$lookImg(allIinspectionReport)">
+                        <img v-else src="../../assets/images/img_photo.png" @click="$lookImg('../../assets/images/img_photo.png')">
+                        <p>综检报告照片</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <bread-foot :breadArr="breadArr" icons="icon-setting-normal">
+            <button class="back_btn" @click="goBack">返回</button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+// import { CodeToText } from 'element-china-area-data'
+// import { filterTime } from '@/utils/filterTime.js'
+import BreadFoot from '@/components/BreadFoot.vue'
+import { filterTime } from '@/utils/filterTime.js'
+import { plateColor } from '@/utils/type.js'
+// import { getCookie } from '@/utils/cookie.js'
+export default {
+    name: 'distantDetectionRecordDetail',
+    data () {
+        return {
+            breadArr: [
+                { title: '查询统计', path: '' }, { title: '异地检测作业查询', path: '' }, { title: '详情', path: '' }
+            ],
+            detectResult: '二级', // 检查结果
+            breakingPicture: '',
+            drivingCertificate: '',
+            environmentRecordPic: '',
+            carriageCard2: '',
+            lightPicture: '',
+            carriageCard: '',
+            powerPicture: '',
+            securityAuditMark: '',
+            securityReportForm: '',
+            allIinspectionReport: '',
+            plateColor,
+            infoObj: {
+                vehicleno: '粤BSD886',
+                platecolor: '1',
+                vehicletype: '小型车',
+                client: '李强',
+                dsid: '211000500',
+                dsname: '深圳市市天翼机动车检测有限公司',
+                detectsn: '211011500202004200005',
+                detectdate: '2020-04-20',
+                detectType: '其他检测',
+                detectResult: '二级'
+            },
+            imgList: {},
+            tabIndex: 'tab1',
+            pdfUrl1: window.uploadURL + 'report/inspect/findInspect1?detectSn=' + this.$route.query.id, // pdf预览地址
+            pdfUrl2: window.uploadURL + 'report/inspect/findInspect2?detectSn=' + this.$route.query.id, // pdf预览地址
+            pdfUrl3: window.uploadURL + 'report/inspect/findInspect3?detectSn=' + this.$route.query.id // pdf预览地址
+        }
+    },
+    components: {
+        BreadFoot
+    },
+    computed: {
+    },
+    filters: {
+        formatTimeS (val) {
+            let str = new Date(val) - 0
+            return filterTime('yyyy-mm-dd', str - 0)
+        },
+        detecttypeFilter (val) {
+            if (val === 1) {
+                return '技术等级评定'
+            } else if (val === 4) {
+                return '二级维护竣工质量检验'
+            } else if (val === 5) {
+                return '汽车大修竣工质量检验'
+            } else {
+                return '其他检测'
+            }
+        }
+    },
+    created () {
+        // if (this.$route.query.type) {
+        //     let res = JSON.parse(localStorage.detectData)
+        //     // console.log(res)
+        //     this.detectResult = res.detectResult
+        //     this.infoObj = res
+        //     // this.imgList = 'data:image/png;base64,' + res.securityDetectImgList
+        //     res.breakingPicture && (this.breakingPicture = 'data:image/png;base64,' + res.breakingPicture)
+        //     res.drivingCertificate && (this.drivingCertificate = 'data:image/png;base64,' + res.drivingCertificate)
+        //     res.environmentRecordPic && (this.environmentRecordPic = 'data:image/png;base64,' + res.environmentRecordPic)
+        //     res.allIinspectionReport && (this.allIinspectionReport = 'data:image/png;base64,' + res.allIinspectionReport)
+        //     res.lightPicture && (this.lightPicture = 'data:image/png;base64,' + res.lightPicture)
+        //     res.powerPicture && (this.powerPicture = 'data:image/png;base64,' + res.powerPicture)
+        //     res.securityAuditMark && (this.securityAuditMark = 'data:image/png;base64,' + res.securityAuditMark)
+        //     res.securityReportForm && (this.securityReportForm = 'data:image/png;base64,' + res.securityReportForm)
+        //     res.carriageCard && (this.carriageCard = 'data:image/png;base64,' + res.carriageCard)
+        // } else {
+        //     this.$post('jc/detect/viewPerformanceDetectRecord', {
+        //         jcPerformanceDetectRecord: {
+        //             detectsn: this.$route.query.id
+        //         }
+        //     }).then(res => {
+        //         if (res.status === 200) {
+        //             this.detectResult = res.data.detectResult
+        //             this.infoObj = res.data.jcPerformanceDetectRecord
+        //             this.imgList = res.data.securityDetectImgList
+        //             this.breakingPicture = res.data.breakingPicture
+        //             this.drivingCertificate = res.data.drivingCertificate
+        //             this.environmentRecordPic = res.data.environmentRecordPic
+        //             this.allIinspectionReport = res.data.allIinspectionReport
+        //             this.lightPicture = res.data.lightPicture
+        //             this.powerPicture = res.data.powerPicture
+        //             this.securityAuditMark = res.data.securityAuditMark
+        //             this.securityReportForm = res.data.securityReportForm
+        //             this.carriageCard = res.data.carriageCard
+        //         } else {
+        //             this.$alert(res.message, '提示')
+        //         }
+        //     })
+        // }
+    },
+    watch: {
+    },
+    methods: {
+        goBack () {
+            this.$router.push('/distantDetectionRecords')
+        }
+    }
+}
+</script>
+
+<style lang='less' scoped>
+    .distantDetectionRecordDetail{
+        background: #fff;
+        padding-bottom: 20px;
+        .table_box {
+            .img_box {
+                // display: inline-block;
+                text-align: left;
+                margin-bottom: 30px;
+                .item {
+                    display: inline-block;
+                    margin-left: 80px;
+                    p {
+                        text-align: center;
+                        font-size: 14px;
+                        color: #666666;
+                        line-height: 30px;
+                    }
+                    img {
+                        box-sizing: border-box;
+                        width: 210px;
+                        height: 210px;
+                        padding: 8px;
+                        border: 1px solid #DDDDDD;
+                    }
+                    &:first-child {
+                        margin-left: 0;
+                    }
+                }
+            }
+            h3 {
+                color: #666666;
+                font-size: 14px;
+                text-align: left;
+                line-height: 40px;
+            }
+            padding: 0 20px 30px;
+            .table {
+                border-collapse:collapse;
+                width: 1200px;
+                table-layout: fixed;
+                word-wrap: break-word;
+                tr {
+                    td {
+                        border: 1px solid #ddd;
+                        font-size: 14px;
+                        font-weight: normal;
+                        height: 40px;
+                        text-align: center;
+                    }
+                    .title {
+                        color: #666;
+                        text-align: right;
+                        width: 126px;
+                    }
+                    .msg {
+                        color: #333;
+                        text-align: left;
+                        width: 376px;
+                        padding-left: 10px;
+                    }
+                }
+                .info {
+                    .title {
+                        width: 190px;
+                    }
+                    .msg {
+                        width: 298px;
+                    }
+                }
+            }
+        }
+    }
+</style>
+<style lang="less">
+
+</style>

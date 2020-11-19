@@ -1,0 +1,344 @@
+<template>
+    <div id="vehicleFixDetail" >
+        <div class="page-title">企业信息</div>
+        <div class="content">
+            <a-form :form="form" class="detail">
+                <div class="base-info" >
+                    <a-row>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>企业名称</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>经验许可证</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>许可证有效期</div>
+                                <a-range-picker
+                                style="width: 100%;"
+                                v-decorator="['vehicleFixDate',{rules: [{ required: true, message: '请选择' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>经营地址</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>详细地址</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>关联运输企业</div>
+                                <a-select placeholder="请选择"
+                                    v-decorator="['vehicleLicensePlateColor',{rules: [{ required: true, message: '请输入' }]}]">
+                                    <a-select-option
+                                        :value="item.value"
+                                        v-for="item in [{value:1,label:'是'},{value:2,label:'否'}]"
+                                        :key="item.value">
+                                            {{item.label}}
+                                    </a-select-option>
+                                </a-select>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>经营状态</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>联系人</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                        <a-col :span="8">
+                            <a-form-item :wrapperCol="{span: 18}">
+                                <div class="item-name"><span class="red">*</span>联系电话</div>
+                                <a-input
+                                maxlength="30"
+                                autocomplete="off"
+                                placeholder="请输入内容"
+                                v-decorator="['vehicleFixRepairName',{rules: [{ required: true, message: '请输入' }]}]"/>
+                            </a-form-item>
+                        </a-col>
+                    </a-row>
+                </div>
+            </a-form>
+        </div>
+        <div v-for="(item,index) in wastList" :key="index">
+            <div class="page-title">
+                危险废物信息{{index+1}}
+                <a-button type="primary" ghost icon="plus" class="fr" style="margin-top:10px;" @click="wastList.push({})" v-if="!index">
+                    新增一栏
+                </a-button>
+                <a-button type="danger" ghost icon="delete" class="fr" style="margin-top:10px;" @click="deleteList(index)" v-else>
+                    删除
+                </a-button>
+            </div>
+            <div class="content">
+                <a-form :form="form" class="detail">
+                    <div class="base-info" >
+                        <a-row>
+                            <a-col :span="8">
+                                <a-form-item :wrapperCol="{span: 18}">
+                                    <div class="item-name"><span class="red">*</span>废物类别</div>
+                                    <a-select placeholder="请选择"
+                                        v-decorator="['vehicleLicensePlateColor1'+index,{rules: [{ required: true, message: '请输入' }]}]">
+                                        <a-select-option
+                                            :value="item.value"
+                                            v-for="item in [{value:1,label:'是'},{value:2,label:'否'}]"
+                                            :key="item.value">
+                                                {{item.label}}
+                                        </a-select-option>
+                                    </a-select>
+                                </a-form-item>
+                            </a-col>
+                            <a-col :span="8">
+                                <a-form-item :wrapperCol="{span: 18}">
+                                    <div class="item-name"><span class="red">*</span>废物代码</div>
+                                    <a-select placeholder="请选择"
+                                        v-decorator="['vehicleLicensePlateCo1lor'+index,{rules: [{ required: true, message: '请输入' }]}]">
+                                        <a-select-option
+                                            :value="item.value"
+                                            v-for="item in [{value:1,label:'是'},{value:2,label:'否'}]"
+                                            :key="item.value">
+                                                {{item.label}}
+                                        </a-select-option>
+                                    </a-select>
+                                </a-form-item>
+                            </a-col>
+                            <a-col :span="8">
+                                <a-form-item :wrapperCol="{span: 18}">
+                                    <div class="item-name"><span class="red">*</span>处置方式大类</div>
+                                    <a-select placeholder="请选择"
+                                        v-decorator="['vehicleLicensePla1teColor'+index,{rules: [{ required: true, message: '请输入' }]}]">
+                                        <a-select-option
+                                            :value="item.value"
+                                            v-for="item in [{value:1,label:'是'},{value:2,label:'否'}]"
+                                            :key="item.value">
+                                                {{item.label}}
+                                        </a-select-option>
+                                    </a-select>
+                                </a-form-item>
+                            </a-col>
+                            <a-col :span="8">
+                                <a-form-item :wrapperCol="{span: 18}">
+                                    <div class="item-name"><span class="red">*</span>处置方式小类</div>
+                                    <a-select placeholder="请选择"
+                                        v-decorator="['vehicleLicensePl1dateColor'+index,{rules: [{ required: true, message: '请输入' }]}]">
+                                        <a-select-option
+                                            :value="item.value"
+                                            v-for="item in [{value:1,label:'是'},{value:2,label:'否'}]"
+                                            :key="item.value">
+                                                {{item.label}}
+                                        </a-select-option>
+                                    </a-select>
+                                </a-form-item>
+                            </a-col>
+                            <a-col :span="16">
+                                <a-form-item :wrapperCol="{span: 21}">
+                                    <div class="item-name"><span class="red">*</span>废物描述</div>
+                                    <a-input
+                                    maxlength="30"
+                                    autocomplete="off"
+                                    placeholder="请输入内容"
+                                    v-decorator="['vehicleFixRepairdasame'+index,{rules: [{ required: true, message: '请输入' }]}]"/>
+                                </a-form-item>
+                            </a-col>
+                        </a-row>
+                    </div>
+                </a-form>
+            </div>
+        </div>
+        <bread-foot
+            :breadArr="[{title:'固废物管理',path:''},{title:'处置企业管理',path:''},{title:'新增企业',path:''}]">
+            <a-button @click="$router.back()" class="mr20">返回</a-button>
+            <a-button class="mr20" type="primary" @click="save" :loading="showLoading">保存</a-button>
+        </bread-foot>
+    </div>
+</template>
+
+<script>
+import BreadFoot from '@/components/BreadFoot.vue'
+// import UploadImage from '@/components/UploadImage'
+
+import {
+    plateColor,
+    carTypeGuo,
+    discharge,
+    batteryType,
+    technologyPowerType,
+    brakingMode,
+    brakeType,
+    transmission,
+    retarder
+} from '@/utils/type.js'
+export default {
+    name: 'vehicleFixDetail',
+    data () {
+        return {
+            wastList: [
+                {
+                    a: '',
+                    b: '',
+                    c: '',
+                    d: '',
+                    e: ''
+                }
+            ],
+            showLoading: false,
+            selectCar: {},
+            fetching: false,
+            vehicleId: '',
+            data: [],
+            plateColor,
+            carTypeGuo,
+            discharge,
+            batteryType,
+            technologyPowerType,
+            brakingMode,
+            brakeType,
+            transmission,
+            retarder,
+            uploadURL: window.uploadURL,
+            form: {},
+            fixInfo: {},
+            projectTable: [],
+            partsTable: []
+        }
+    },
+    components: {
+        BreadFoot
+    },
+    created () {
+        // this.view()
+        // this.handleSearch('')
+    },
+    methods: {
+        deleteList (index) {
+            this.wastList = this.wastList.slice(0, index).concat(this.wastList.slice(index + 1, this.wastList.length))
+        },
+        handleSearch (value) {
+        },
+        handleChange (value) {
+        },
+        save () {
+        },
+        view () {
+            // if (!this.$checkAuth('statistics:vehiclerepairdesc:list,statistics:vehiclerepairdesc:info')) {
+            //     this.$message.error('您没有该权限')
+            //     return
+            // }
+            this.$get('/statistics/vehiclerepairdesc/info?vehicleFixId=' + this.$route.query.id)
+                .then(res => {
+                    if (res.status === 200) {
+                        if (res.data.code === 200) {
+                            this.fixInfo = res.data.data
+                        }
+                    }
+                })
+        }
+    }
+}
+</script>
+
+<style lang='less' scoped>
+#vehicleFixDetail {
+    background: #fff;
+    height: 100%;
+    overflow: auto;
+    .content {
+        border-bottom: 20px solid #EFF2F5;
+        .form {
+            .item-name {
+                line-height: 32px;
+            }
+            .input {
+                width: 100%;
+            }
+            .avatar-uploader {
+                display: block;
+            }
+            .upload-tips {
+                margin: 0;
+                float: none;
+                text-align: center;
+                width: 104px;
+                font-size: 12px;
+            }
+        }
+        .base-info {
+            padding: 24px;
+        }
+        .project {
+            padding: 0px 24px 32px 24px;
+            .image-item {
+                display: inline-block;
+                margin-right: 24px;
+            }
+        }
+        .parts {
+            padding: 0px 32px 32px 32px;
+        }
+        .title {
+            padding: 16px 0px 4px 0;
+            font-size: 15px;
+            line-height: 32px;
+            color: #333;
+            font-weight: bold;
+        }
+        .row {
+            margin-bottom: 16px;
+        }
+        .label {
+            color: #333;
+            display: inline-block;
+        }
+        .value {
+            color: #666;
+            display: inline-block;
+        }
+    }
+}
+</style>
+<style lang="less">
+.ant-form-item-label label {
+    color: #293140;
+}
+</style>
